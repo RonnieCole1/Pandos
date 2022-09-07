@@ -67,3 +67,11 @@ void insertChild (pcb_t *prnt, pcb_t *p){
     p -> p_prnt = prnt;
     prnt -> p_child = p;
 }
+        
+pcb_t *removeChild(pcb_t){
+    p->p_child = null;
+    if(p->p_prnt == null){
+        return null;
+    } else{
+        return(p->p_child);
+    }
