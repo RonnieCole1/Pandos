@@ -84,3 +84,4 @@ pcb_t *outchild(pcb_t *p){
     } else{
         return p;
     }
+}
