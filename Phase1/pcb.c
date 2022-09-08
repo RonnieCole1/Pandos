@@ -2,7 +2,7 @@
 #include "types.h"
 #include "const.h"
 
-HIDDEN pcb_t *pcbFree_h;
+HIDDEN pcb_PTR pcbFree_h;
 
 /* add pcb on free list */
 void freePcb(pcb_PTR p)
@@ -50,7 +50,7 @@ void initPcbs(){
     }
 }
 
-pcb_t *mkEmptyProcQ(){
+pcb_PTR mkEmptyProcQ(){
     return null;
 }
 
@@ -70,7 +70,7 @@ void insertProcQ(pcb_PTR *tp, pcb_PTR p){
     }
 }
 
-pcb_t *removeProcQ(pcb_PTR *tp){
+pcb_PTR removeProcQ(pcb_PTR *tp){
     if(emptyProcQ(tp)) {
         return NULL;
     } else {
@@ -113,7 +113,7 @@ pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
     return NULL
 }
 
-pcb_t *headProc(pcb_PT *tp) {
+pcb_PTR headProc(pcb_PT *tp) {
     if(emptyProcQ(tp)) {
         return NULL;
     }
@@ -129,7 +129,7 @@ void insertChild (pcb_PTR prnt, pcb_PTR p){
     prnt -> p_child = p;
 }
         
-pcb_t *removeChild(pcb_PTR p){
+pcb_PTR removeChild(pcb_PTR p){
     p->p_child = null;
     if(p->p_prnt == null){
         return null;
@@ -138,7 +138,7 @@ pcb_t *removeChild(pcb_PTR p){
     }
 }
         
-pcb_t *outchild(pcb_PTR p){
+pcb_PTR outchild(pcb_PTR p){
     p->p_prnt = null;
     if(p->p_prnt == null){
         return null;
