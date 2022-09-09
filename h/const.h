@@ -11,6 +11,12 @@
 #define PAGESIZE		  4096			/* page size in bytes	*/
 #define WORDLEN			  4				  /* word size in bytes	*/
 
+/* define MAXPROC */
+#define MAXPROC         20
+
+/* define dummy nodes */
+#define MINI             0
+#define MAXINT           ((void *)0xFFFFFFFF)
 
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR		0x10000000
@@ -18,7 +24,6 @@
 #define TODLOADDR		  0x1000001C
 #define INTERVALTMR		0x10000020	
 #define TIMESCALEADDR	0x10000024
-
 
 /* utility constants */
 #define	TRUE			    1
