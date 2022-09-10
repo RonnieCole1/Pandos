@@ -1,17 +1,27 @@
-#include "../h/pcb.h"
-#include "../h/types.h"
-#include "../h/const.h"
+#include "pcb.h"
+#include "types.h"
+#include "const.h"
 
-HIDDEN pcb_PTR pcbFree_h;
+HIDDEN pcb_t *pcbFree_h;
 
-/* add pcb on free list */
-void freePcb(pcb_PTR p)
+
+
+/*
+    Insert the element pointed to by p onto the pcbFree list.
+*/
+void freePcb(pcb_t *p)
 {
     p->p_next = pcbFree_h;
     pcbFree_h = p;
 }
 
-/*initialize the PCB */
+/*
+    Return NULL if the pcbFree list is empty. Otherwise,
+    remove an element from the pcbFree list, provide initial values for ALL of the pcb
+    fields (i.e. NULL and/or 0) and then return a pointer to the removed element. pcbs
+    get reused, so it is important that no previous value persist in a pcb when it gets
+    reallocated.
+*/
 pcb_PTR allocPcb()
 {
     if(pcbFree_h == NULL)
@@ -22,22 +32,25 @@ pcb_PTR allocPcb()
     temp = pcbFree_h;
     pcbFree_h = pcbFree_h->p_next;
 
-    /* queue fields */
+    /* 
+        Initialize the queue fields by setting them to NULL.
+    */
     temp->p_next = NULL;
     temp->p_prev = NULL;
 
-    /* tree fields */
+    /* 
+        Initialize the tree fields by setting them to NULL.
+    */
     temp->p_prnt = NULL;
     temp->p_child = NULL;
     temp->p_sib = NULL;
 
-    /* process status */
-    /*temp->p_s = NULL;*/
+    /* 
+        Initialize the status of our processes by setting them to Null.
+    */
+    temp->p_s = NULL;
     temp->p_time = NULL;
     temp->p_semAdd = NULL;
-
-    /* support layer */
-    /* temp->p_supportStruct = NULL; */
 
     return temp;
 }
@@ -45,22 +58,20 @@ pcb_PTR allocPcb()
 /* initialize pcbFree List */
 void initPcbs(){
     static pcb_t pcbTable[MAXPROC];
-    int i;
-    for(i = 0; i < MAXPROC; i++){
-        allocPcb(&(pcbTable[i]));
+    for(int i = 0; i < MAXPROC; i++){
+        allocPcb(&pcbTable[i]);
     }
 }
 
-pcb_PTR mkEmptyProcQ(){
-    return NULL;
+pcb_t *mkEmptyProcQ(){
+    return null;
 }
 
 int emptyProcQ(pcb_t *tp){
-    return (tp == NULL);
+    return tp == null;
 }
 
-void insertProcQ(pcb_PTR *tp, pcb_PTR p){
-
+insertProcQ(pcb_t **tp, pcb_t *p){
     /* empty queue case */
     if(emptyProcQ(tp)){
         *tp = p;
@@ -72,34 +83,29 @@ void insertProcQ(pcb_PTR *tp, pcb_PTR p){
     }
 }
 
-pcb_PTR removeProcQ(pcb_PTR *tp){
+pcb_t *removeProcQ(pcb_t **tp){
     if(emptyProcQ(tp)) {
         return NULL;
     } else {
-        pcb_PTR temp = (*tp)->p_prev;
+        pcb_t temp = p->p_prev;
         *tp = temp;
-        return;
     }
 }
 
 /* take a PCB out of the queue of some TP and then returns it */
 pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
     pcb_PTR final;
-
     /* empty case */
     if ((emptyProcQ(*tp) || (p == NULL)))
     {
         return NULL;
     }
-
     /* single case */
     if((*tp)==p)
     {
         return removeProcQ(*tp);
     }
-
     pcb_PTR temp;
-
     /* begin to chug through the list looking for our removeable PCB */
     temp = (*tp)->p_next;
     while(temp != (*tp))
@@ -116,40 +122,39 @@ pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
         }
         temp = temp -> p_next;
     }
-
-    return NULL;
+    return NULL
 }
 
-pcb_PTR headProcQ(pcb_PTR *tp) {
+pcb_t *headProc(pcb_t *tp) {
     if(emptyProcQ(tp)) {
         return NULL;
     }
-    return *tp;
+    return (tp -> p_next);
 }
 
-int emptyChild(pcb_PTR p) {
-    return (p->p_child == NULL);
+int emptyChild(pcb_t *p) {
+    return(p -> p_child = NULL);
 }
 
-void insertChild (pcb_PTR prnt, pcb_PTR p){
-    /* p->p_child = prnt; */
-    p->p_prnt = prnt;
-    prnt->p_child = p;
+void insertChild (pcb_t *prnt, pcb_t *p){
+    p -> p_prnt = prnt;
+    prnt -> p_child = p;
 }
         
-pcb_PTR removeChild(pcb_PTR p){
-    if(emptyChild(p)){
-        return NULL;
-    } else {
-        p->p_child = NULL;
-        return p;
+pcb_t *removeChild(pcb_t){
+    p->p_child = null;
+    if(p->p_prnt == null){
+        return null;
+    } else{
+        return(p->p_child);
     }
 }
         
-pcb_PTR outchild(pcb_PTR p){
-    if(emptyChild(p)){
-        return NULL;
-    } else {
-        return removeChild(p);
+pcb_t *outchild(pcb_t *p){
+    p->p_prnt = null;
+    if(p->p_prnt == null){
+        return null;
+    } else{
+        return p;
     }
 }
