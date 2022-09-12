@@ -4,21 +4,41 @@
 #include "../h/types.h"
 #include "../h/const.h"
 
-/*
-    asl.c contains the Active Semaphore list, which consists of a Free Semaphore list and an Active Semaphore list.
-    Each semaphore has an address (semAdd) and a process queue associated with it. A semaphore is active if there is at
-    least one pcb on the process queue associated with it.
-    The semaphore list is a sorted NULL-terminated single, linearly lnked list of semaphore descriptors whose
-    head is pointed to by the variable semd_h. The list semd_h points to will represent out Active Semaphore List (ASL).
-    We will keep the ASL using s_semAdd as a sort key. The list will be sorted in acending order.
-    The Active Semaphore list will also contain two dummy nodes. One with semAdd = 0 and another with semAdd = MAXINT.
-    These dummy nodes will handle edge cases.
+/***************************************** Active Semaphore List *****************************************
+ *   asl.c contains the Active Semaphore list, which consists of a Free Semaphore list and an Active Semaphore list.
+ *   Each semaphore has an address (semAdd) and a process queue associated with it. A semaphore is active if there is at
+ *   least one pcb on the process queue associated with it.
+ *   The semaphore list is a sorted NULL-terminated single, linearly lnked list of semaphore descriptors whose
+ *   head is pointed to by the variable semd_h. The list semd_h points to will represent out Active Semaphore List (ASL).
+ *   We will keep the ASL using s_semAdd as a sort key. The list will be sorted in acending order.
+ *   The Active Semaphore list will also contain two dummy nodes. One with semAdd = 0 and another with semAdd = MAXINT.
+ *   These dummy nodes will handle edge cases.
+ * 
+ *   Authors:
+ *      Ronnie Cole
+ *      Joe Pinkerton
+ *      Joseph Counts
 */
 
 HIDDEN semd_t *semd_h, *semdFree_h;
 
 
 static semd_t semdTable[MAXPROC];       /* A static list of semaphore descriptors. */
+/*
+    Dummy Node 1 represents a node whose semaphore address is equal to 0. Dummy Node 2 represents
+    a node whose semaphore address is equal to our MAXINT, which in Hexadecimal is 0xFFFFFFFF.
+*/
+void initDummyNodes() {
+    struct semd_t* dummyNode1 = (struct semd_t*) malloc(sizeof(struct semd_t));
+        dummyNode1->s_procQ = NULL;
+        dummyNode1->s_semAdd = 0;
+        dummyNode1->s_next = NULL;
+
+    struct semd_t* dummyNode2 = (struct semd_t*) malloc(sizeof(struct semd_t));
+        dummyNode2->s_procQ = NULL;
+        dummyNode2->s_semAdd = MAXINT;
+        dummyNode2->s_next = NULL;
+}
 
 /*
     Insert the pcb pointed to by p at the tail of the process queue associated with the semaphore whose physical address is semAdd
@@ -28,12 +48,14 @@ static semd_t semdTable[MAXPROC];       /* A static list of semaphore descriptor
     and the smdFree list is empty, return TRUE. In all other cases return FALSE.
 */
 int insertBlocked(int *semAdd, pcb_PTR p){
-    if(search(semAdd)){
+    semd_t* temp;
+    temp->s_semAdd = semAdd;
+    if(search(temp)){
        p->p_semAdd = semAdd;
        insertProcQ(p->p_semAdd, p);
     } else {
         /* Allocate sem descriptor from FreeList */
-        
+
     }
 }
 
@@ -44,10 +66,10 @@ int insertBlocked(int *semAdd, pcb_PTR p){
     remove the seaphore descriptor from the ASL and return it to the semdFree list.
 */
 pcb_t *removeBlocked(int *semAdd){
-    if(search(semAdd) == FALSE){
+    if(search(semAdd) == NULL){
         return NULL;
     } else {
-        semd_t *temp;
+        semd_t* temp;
         *temp->s_procQ;
         removeProcQ(temp);
         if(emptyProcQ(temp)){
@@ -63,7 +85,7 @@ pcb_t *removeBlocked(int *semAdd){
     which is an error condition, return NULL; otherwise, return p.
 */
 pcb_t *outBlocked(pcb_t *p){
-    if(search(p) == FALSE){
+    if(search(p) == NULL){
         return NULL;
     } else {
         return p;
@@ -75,7 +97,7 @@ pcb_t *outBlocked(pcb_t *p){
     if semAdd is not found on the ASL or if the process queue associated with semAdd is empty.
 */
 pcb_t *headBlocked(int *semAdd){
-    if(search(semAdd) == FALSE){
+    if(search(semAdd) == NULL){
         return NULL;
     }
     return headProcQ(semAdd);
@@ -87,16 +109,27 @@ pcb_t *headBlocked(int *semAdd){
     This method will be only called once during data structure initialization.
 */
 void initASL(){
+    initDummyNodes();
     int i;
     for(i = 0; i < MAXPROC; i++){
         semdFree_h = &(semdTable[i]);
     }
 }
 
-/* Helper function */
+/*
+    Search for a Semaphore Descriptor *s. Start at the first Dummy Node and check
+    the following Semaphore node. If it's semaphore address matches the semaphore
+    address for "s". If it doesn't, next the next node.
+*/
 int search(semd_t *s){
-    int i;
-    for(i = 0; i < MAXPROC; i++){
-        return ((s)->s_semAdd == &(semdTable[i]));
-    }
+    semd_t *finder;
+    finder->s_next = dummyNode1; /* Need to figure out how to initialize dummy node */
+    while(finder->s_next->s_semAdd != MAXINT)
+        if (finder->s_next->s_semAdd = s->s_semAdd) {
+            return s;
+        }
+        else {
+            finder = finder->s_next->s_next;
+        }
+    return NULL;
 }
