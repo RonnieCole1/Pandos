@@ -23,22 +23,7 @@
 HIDDEN semd_t *semd_h, *semdFree_h;
 
 
-static semd_t semdTable[MAXPROC];       /* A static list of semaphore descriptors. */
-/*
-    Dummy Node 1 represents a node whose semaphore address is equal to 0. Dummy Node 2 represents
-    a node whose semaphore address is equal to our MAXINT, which in Hexadecimal is 0xFFFFFFFF.
-*/
-void initDummyNodes() {
-    struct semd_t* dummyNode1 = (struct semd_t*) malloc(sizeof(struct semd_t));
-        dummyNode1->s_procQ = NULL;
-        dummyNode1->s_semAdd = 0;
-        dummyNode1->s_next = NULL;
-
-    struct semd_t* dummyNode2 = (struct semd_t*) malloc(sizeof(struct semd_t));
-        dummyNode2->s_procQ = NULL;
-        dummyNode2->s_semAdd = MAXINT;
-        dummyNode2->s_next = NULL;
-}
+static semd_t semdTable[MAXPROC + 2];       /* A static list of semaphore descriptors with 2 dummy nodes for the head and tail.  */
 
 /*
     Insert the pcb pointed to by p at the tail of the process queue associated with the semaphore whose physical address is semAdd
