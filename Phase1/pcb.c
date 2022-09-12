@@ -106,7 +106,12 @@ void insertProcQ(pcb_PTR *tp, pcb_PTR p){
         p->p_next = p;
         p->p_prev = p;
     } else {
-        /* Joe work on this */
+        pcb_PTR temp = *tp;
+        *tp = p;
+        p->p_next = temp->p_next;
+        temp->p_next = p;
+        p->p_prev = temp;
+        p->p_next->p_prev = p;
     }
 }
 
