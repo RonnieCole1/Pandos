@@ -47,7 +47,6 @@ int insertBlocked(int *semAdd, pcb_PTR p){
     } else {
     /* Allocate sem descriptor from FreeList */
         semd_t* insrt; /* Joe used semd_PTR but it didn't compile. */
-        insrt = free();
         if(insrt == NULL)
         {
             return TRUE;
@@ -112,16 +111,14 @@ pcb_t *headBlocked(int *semAdd){
     This method will be only called once during data structure initialization.
 */
 void initASL(){
-    dummyNode1 = (struct semd_t*) malloc(sizeof(struct semd_t));
     dummyNode1->s_procQ = NULL;
     dummyNode1->s_semAdd = 0;
     dummyNode1->s_next = NULL;
 
-    dummyNode2 = (struct semd_t*) malloc(sizeof(struct semd_t));
     dummyNode2->s_procQ = NULL;
     dummyNode2->s_semAdd = MAXINT;
     dummyNode2->s_next = NULL;
-    
+
     int i;
     for(i = 0; i < MAXPROC; i++){
         semdFree_h = &(semdTable[i]);
