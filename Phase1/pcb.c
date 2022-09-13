@@ -180,11 +180,11 @@ pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
     is pointed to by tp. Do not remove this pcbfrom the process queue.
     Return NULL if the process queue is empty. 
 */
-pcb_PTR headProcQ(pcb_PTR *tp) {
+pcb_t *headProcQ(pcb_t *tp) {
     if(emptyProcQ(tp)) {
         return NULL;
     }
-    return tp;
+    return (tp->p_next);
 }
 
 /************************************ Process Tree ****************************
