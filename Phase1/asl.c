@@ -31,12 +31,16 @@ struct semd_t* dummyNode2; /* The last node in our semaphore list */
 /*
     Insert the pcb pointed to by p at the tail of the process queue associated with the semaphore whose physical address is semAdd
     and set the semaphore address of p to semAdd. If the semaphore is currently not active (i.e. there is no descriptor for it in the
-    ASL), akkicated a bew descriptor from the semdFree list, insert it in the ASL (at the appropriate position), initialize all of the fields
-    (i.e. set s_semAdd to semAdd, and s_procq to mkEmptyProcQ()), and proceed as aboe. If a new semaphore descriptor needs to be allocated
+    ASL), allocate a new descriptor from the semdFree list, insert it in the ASL (at the appropriate position), initialize all of the fields
+    (i.e. set s_semAdd to semAdd, and s_procq to mkEmptyProcQ()), and proceed as above. If a new semaphore descriptor needs to be allocated
     and the smdFree list is empty, return TRUE. In all other cases return FALSE.
 */
 int insertBlocked(int *semAdd, pcb_PTR p){
     semd_t* temp = search(semAdd);
+    if(semdFree_h == NULL)
+    {
+        return TRUE;
+    }
     if(temp->s_next->s_semAdd == semAdd){
        p->p_semAdd = semAdd;
        insertProcQ(p->p_next->p_semAdd, p);
@@ -44,10 +48,6 @@ int insertBlocked(int *semAdd, pcb_PTR p){
     } else {
     /* Allocate sem descriptor from FreeList */
         semd_t* insrt; /* Joe used semd_PTR but it didn't compile. */
-        if(insrt == NULL)
-        {
-            return TRUE;
-        }
         insrt -> s_procQ = mkEmptyProcQ();
         insrt -> s_next=temp->s_next;
         temp -> s_next = insrt;
@@ -140,7 +140,7 @@ void initASL(){
     Search for a Semaphore Descriptor *semAdd. If it's semaphore address matches the semaphore
     address for semAdd. If it doesn't, next the next node.
 */
-void search(int *semAdd){
+semd_t *search(int *semAdd){
     semd_t *temp = semd_h;
     if(semAdd == NULL){
         semAdd = MAXINT;
