@@ -244,19 +244,19 @@ pcb_PTR removeChild(pcb_PTR p){
 
         /* only has one child */
         if(p->p_child->p_sibn == NULL){
-            p->p_child = NULL;
             p->p_child->p_prnt = NULL;
-	        p->p_child->p_sibn = NULL;
-	        p->p_child->p_sibp = NULL;
+            p->p_child->p_child = NULL;
+            p->p_child = p->p_child->p_child;
+            p->p_child->p_prnt = p;
         }    
         
         /* has siblings */
         else{
             p->p_child = p->p_child->p_sibn;
-            p->p_child->p_prev = NULL;
-            p->p_child->p_prnt = NULL;
-		p->p_child->p_sibn = NULL;
-		p->p_child->p_sibp = NULL;
+            p->p_child->p_sibp->p_prnt = NULL;
+            p->p_child->p_sibp->p_sibn = NULL;
+            p->p_child->p_sibp->p_child = p->p_child;
+            p->p_child->p_child->p_prnt = p->p_child;
         }
         return temp;
     }
