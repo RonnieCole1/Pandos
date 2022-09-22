@@ -237,7 +237,6 @@ void insertChild (pcb_PTR prnt, pcb_PTR p){
     return a pointer to this removed first child pcb. 
 */
 pcb_PTR removeChild(pcb_PTR p){
-    
     if(emptyChild(p)){
         return NULL;
     } else{
@@ -256,8 +255,8 @@ pcb_PTR removeChild(pcb_PTR p){
             p->p_child = p->p_child->p_sibn;
             p->p_child->p_prev = NULL;
             p->p_child->p_prnt = NULL;
-		    p->p_child->p_sibn = NULL;
-		    p->p_child->p_sibp = NULL;
+		p->p_child->p_sibn = NULL;
+		p->p_child->p_sibp = NULL;
         }
         return temp;
     }
