@@ -8,6 +8,15 @@
  *   with a Queue pointer pointed at the tail. This structure is organized as a 
  *   Queue. 
  * 
+ * Fields:
+ *   p_next    - references the next node of some node.
+ *   p_prev    - references the previous node of some node.
+ *   tp        - tailpointer to the node at the end of the queue. Often represented as 
+ *               a pointer (*tp)
+ *   pcbFree_h - points to the head of the pcbFree list. 
+ *   
+ *   Also of note: pcb_PTR is equivilent to p_next*. It is a pointer to a pointer
+ * 
  *   Authors:
  *      Ronnie Cole
  *      Joe Pinkerton
@@ -42,18 +51,17 @@ pcb_PTR allocPcb()
     temp = pcbFree_h;
     pcbFree_h = pcbFree_h->p_next;
 
-    /* queue fields */
+    /* initialize queue fields by setting to NULL */
     temp->p_next = NULL;
     temp->p_prev = NULL;
 
-    /* tree fields */
+    /* initialize tree fields by setting to NULL */
     temp->p_prnt = NULL;
     temp->p_child = NULL;
     temp->p_sibp = NULL;
     temp->p_sibn = NULL;
 
     /* process status */
-    /*temp->p_s = NULL;*/
     temp->p_time = NULL;
     temp->p_semAdd = NULL;
 
@@ -69,9 +77,11 @@ pcb_PTR allocPcb()
     once during data structure initialization. 
 */
 void initPcbs(){
+    /* Create an array of pcb_ts. */
     static pcb_t pcbTable[MAXPROC];
     int i;
     pcbFree_h = NULL;
+    /* Insert Pcbs from the array pcbTable to our process queue. */
     for(i = 0; i < MAXPROC; i++){
         freePcb(&(pcbTable[i]));
     }
@@ -101,12 +111,12 @@ int emptyProcQ(pcb_t *tp){
 */
 
 void insertProcQ(pcb_PTR *tp, pcb_PTR p){
-
-    /* empty queue case */
+    /* Check if our queue is empty */
     if(emptyProcQ(*tp)){
         *tp = p;
         p->p_next = p;
         p->p_prev = p;
+    /* If our queue has 1 or more elements */
     } else {
         pcb_PTR temp = *tp;
         *tp = p;
@@ -124,9 +134,11 @@ void insertProcQ(pcb_PTR *tp, pcb_PTR p){
     Update the process queue’s tail pointer if necessary.
 */
 pcb_PTR removeProcQ(pcb_PTR *tp){
+    /* Check if our queue is empty */
     if(emptyProcQ(*tp)) {
         return NULL;
     } else {
+        /* temp is a pointer to the removed element */
         pcb_PTR temp = headProcQ(*tp);
         if((*tp)->p_next == (*tp)){
             *tp = NULL;
@@ -147,24 +159,24 @@ pcb_PTR removeProcQ(pcb_PTR *tp){
 pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
     pcb_PTR final;
 
-    /* empty case */
+    /* Return NULL if our queue is empty */
     if ((emptyProcQ(*tp) || (p == NULL)))
     {
         return NULL;
     }
 
-    /* single case */
+    /* Check if there is a single element. If there is, just remove it. */
     if((*tp)==p)
     {
         return removeProcQ(*tp);
     }
 
-    pcb_PTR temp;
+    pcb_PTR temp = (*tp)->p_next; /* Pointer used to search for p */
 
-    /* begin to chug through the list looking for our removeable PCB */
-    temp = (*tp)->p_next;
+    /* Begin to chug through the list looking for our removeable PCB. */
     while(temp != (*tp))
     {
+        /* If we find the pcb we were looking to remove... */
         if(temp == p)
         {
             /* set all notable fields equal to the one being removed */
@@ -173,11 +185,13 @@ pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
             final->p_next->p_prev = temp->p_prev;
             final->p_next = NULL;
             final->p_prev = NULL;
+            /* Return p, which is equal to final */
             return final;
         }
+        /* step through the queue */
         temp = temp -> p_next;
     }
-
+    /* If we reach this point, we could not find p in the pcb queue */
     return NULL;
 }
 
@@ -187,17 +201,29 @@ pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
     Return NULL if the process queue is empty. 
 */
 pcb_t *headProcQ(pcb_t *tp) {
+    /* Check if the queue is empty */
     if(emptyProcQ(tp)) {
         return NULL;
     }
+    /* If it is not empty, take advantage of the pcb queue structure to simpy step
+    from the tail pointer to the next node, which represents the head. */
     return tp->p_next;
 }
 
 /************************************ Process Tree ****************************
  *   pcb.c also contains a process tree, or a tree of process queues. This tree is
- *   organized so that a parent pcb contains a pointer to a NULL terminated single,
+ *   organized so that a parent pcb contains a pointer to a NULL terminated doubly,
  *   linearly linked list of its child pcbs. Each child process has a pointer to its
- *   parent pcb and possibly the next child pcb of its parent.
+ *   parent pcb and possibly the next child pcb of its parent. For this data structure,
+ *   we created fields p_sibn and p_sibp to give us access to both the previous and 
+ *   next siblings of node p.
+ * 
+ * Fields:
+ *   p_prnt    - references the parent node of some node.
+ *   p_sibn    - references the next sibling node of some node.
+ *   p_sibp    - references the previous sibling node of some node.
+ *   p_child   - references the first child node of some node.
+ *   pcbFree_h - points to the head of the pcbFree list. 
 */
 
 /* 
@@ -212,15 +238,17 @@ int emptyChild(pcb_PTR p) {
     Make the pcb pointed to by p a child of the pcb pointed to by prnt.
 */
 void insertChild (pcb_PTR prnt, pcb_PTR p){
-    /* has no children */
+    /* Check if the node has no children. */
     if(emptyChild(prnt)){
+        /* Make p a child of prnt */
         prnt->p_child = p;
         p->p_prnt = prnt;
         p->p_sibn = NULL;
         p->p_sibp = NULL;
     } 
     
-    /* has children */
+    /* If prnt already has children, make p a child and and prnts other children
+    siblings of p */
     else{
         prnt->p_child->p_sibp = p;
         p->p_sibn = prnt->p_child;
@@ -237,12 +265,15 @@ void insertChild (pcb_PTR prnt, pcb_PTR p){
     return a pointer to this removed first child pcb. 
 */
 pcb_PTR removeChild(pcb_PTR p){
+    /* Check if p has any children. If not return NULL */
      if(emptyChild(p)){
         return NULL;
+    /* If p has children... */
     } else{
+        /*Create temporary pointer to store removed first child */
         pcb_PTR temp = p->p_child;
 
-        /* only has one child */
+        /* If p only has one child, set that child's fields to NULL */
         if(p->p_child->p_sibn == NULL){
             p->p_child = NULL;
             p->p_child->p_prnt = NULL;
@@ -250,7 +281,8 @@ pcb_PTR removeChild(pcb_PTR p){
 	        p->p_child->p_sibp = NULL;
         }    
 
-        /* has siblings */
+        /* If p has siblings, make p's second child its first child and
+        set the previous first child's fields to NULL. */
         else{
             p->p_child = p->p_child->p_sibn;
             p->p_child->p_prev = NULL;
@@ -258,6 +290,7 @@ pcb_PTR removeChild(pcb_PTR p){
 		    p->p_child->p_sibn = NULL;
 		    p->p_child->p_sibp = NULL;
         }
+        /* Return the pointer to removed child of p */
         return temp;
     }
 }
@@ -269,18 +302,20 @@ pcb_PTR removeChild(pcb_PTR p){
     its parent. 
 */       
 pcb_PTR outChild(pcb_PTR p){
+    /* Check if p has a parent. */
     if(p->p_prnt == NULL){
         return NULL;
     } 
+    /* Otherwise, p must have a parent and therefore... */
 
-    /* if p is the only child */
+    /* p is the only child */
     else if(p->p_sibp == NULL && p->p_sibn == NULL){
         p->p_prnt->p_child = NULL;
         p->p_prnt = NULL;
         return p;
     } 
 
-    /* if p is in the middle */
+    /* p is neither the first child or the last child */
     else if(p->p_sibn != NULL && p->p_sibp != NULL){
         p->p_prnt->p_child = NULL;
         p->p_prnt = NULL;
@@ -288,12 +323,13 @@ pcb_PTR outChild(pcb_PTR p){
         return p;
     }
 
-    /* if p is the first child */
+    /* p is the first child */
     else if(p->p_sibp == NULL && p->p_sibn != NULL){
+        /* removeChild removes the first child */
         return removeChild(p->p_prnt);
     }
 
-    /* if p is the last child */
+    /* p is the last child */
     else if(p->p_sibp != NULL && p->p_sibn == NULL){
         p->p_prnt->p_child = NULL;
         p->p_prnt = NULL;
@@ -301,37 +337,3 @@ pcb_PTR outChild(pcb_PTR p){
         return p;
     }
 }
-
-    /*if(p->p_prnt == NULL){
-        return NULL;
-    }
-
-    /* if p is the only child */
-    /*else if(p->p_sibp == NULL && p->p_sibn == NULL){
-        p->p_prnt->p_child = NULL;
-        p->p_prnt = NULL;
-        return p;
-    } 
-
-    /* if p is the middle child */
-   /* else if(p->p_sibn != NULL && p->p_sibp != NULL){
-        p->p_sibn->p_sibp = p->p_sibp;
-		p->p_sibp->p_sibn = p->p_sibn;
-		p->p_prnt = NULL;
-        return p;
-    }
-
-    /* if p is the first child */
-   /* else if(p->p_prnt->p_child == p){
-        return removeChild(p->p_prnt);
-    }
-
-    /* if p is the last child */
-    /*else if(p->p_sibn == NULL){
-        p->p_sibp->p_sibn = NULL;
-		p->p_prnt = NULL;
-        return p;
-    }
-
-    return NULL;
-}*/
