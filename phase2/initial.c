@@ -1,6 +1,7 @@
 #include "../h/pcb.h"
 #include "../h/types.h"
 #include "../h/const.h"
+#include "p2test.c"
 
 /* Declare global variables */
 int procssCnt;      /* int indicating the number of strated, but not yet terminated processes */
@@ -36,8 +37,11 @@ int main(){
 
     /* Instantiate a single process */
     currentProc = allocPcb();
-    currentProc->p_s
     procssCnt++;
+
+    currentProc->p_s.s_pc = (memaddr) test; /* test function in p2test */
+
+    extern void test();
 
     /* Call the Scheduler */
     scheduler();
