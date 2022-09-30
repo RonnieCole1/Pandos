@@ -88,7 +88,6 @@ pcb_t *outBlocked(pcb_t *p){
             temp->s_next = temp->s_next->s_next;
             freeSEMD(temp2);
         }
-        temp1->p_semAdd = NULL;
         return temp1;
     }
     return NULL;

@@ -14,8 +14,7 @@
 /* define MAXPROC */
 #define MAXPROC         20
 
-/* define dummy nodes */
-#define MINI             0
+/* define MAXINT */
 #define MAXINT           ((void *)0xFFFFFFFF)
 
 /* timer, timescale, TOD-LO and other bus regs */
