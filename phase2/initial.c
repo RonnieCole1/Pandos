@@ -25,12 +25,18 @@ int main(){
     procssCnt = softBlockCnt = 0;
     readyQue = mkEmptyProcQ();
     currentProc = NULL;
-    int deviceSema4s[MAXDEVICECNT] = 0;
+
+    int i;
+    for(i = 0; i < MAXDEVICECNT; i++){
+        deviceSema4s[i] = 0;
+    }
 
     /* Load system-wide Interval Timer with 100 milliseconds */
     INTERVALTMR
 
+    /* Instantiate a single process */
     currentProc = allocPcb();
+    currentProc->p_s
     procssCnt++;
 
     /* Call the Scheduler */
