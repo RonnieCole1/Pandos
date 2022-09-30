@@ -29,4 +29,10 @@ int main(){
 
     /* Load system-wide Interval Timer with 100 milliseconds */
     INTERVALTMR
+
+    currentProc = allocPcb();
+    procssCnt++;
+
+    /* Call the Scheduler */
+    scheduler();
 }

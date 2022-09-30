@@ -53,7 +53,7 @@ pcb_PTR allocPcb()
     temp->p_sibn = NULL;
 
     /* process status */
-    /*temp->p_s = NULL;*/
+    temp->p_s = NULL;
     temp->p_time = NULL;
     temp->p_semAdd = NULL;
 
