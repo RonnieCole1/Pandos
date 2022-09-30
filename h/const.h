@@ -20,6 +20,9 @@
 /* define MAXDEVICECNT */
 #define MAXDEVICECNT    49
 
+/* define top of the Nucleus stack page */
+#define TOP     0x20001000
+
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR		0x10000000
 #define RAMBASESIZE		0x10000004
