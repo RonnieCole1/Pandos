@@ -10,9 +10,6 @@ pcb_t *currentProc;  /* pointer to the pcb that is in the "running" state */
 int deviceSema4s[MAXDEVICECNT]; 
 
 int main(){
-    
-    
-
     /* Populate the Processor 0 Pass Up Vector */
     passupvector_t temp;
     temp->tlb_refill_handler = (memaddr) uTLB_RefillHandler;
