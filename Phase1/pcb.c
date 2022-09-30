@@ -54,11 +54,11 @@ pcb_PTR allocPcb()
 
     /* process status */
     temp->p_s = NULL;
-    temp->p_time = NULL;
+    temp->p_time = 0;
     temp->p_semAdd = NULL;
 
     /* support layer */
-    /* temp->p_supportStruct = NULL; */
+    temp->p_supportStruct = NULL;
 
     return temp;
 }

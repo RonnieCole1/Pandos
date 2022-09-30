@@ -80,12 +80,12 @@ typedef struct pcb_t{
 					*p_sibn;	/* pointer to next sibling */
 
     /* process status information */
-    /*state_t         p_s;         /*processor state */
+    state_t         p_s;         /*processor state */
     cpu_t           p_time;     /* cpu time used by proc */
     int             *p_semAdd;  /* pointer to sema4 on which process blocked */
 
     /* support layer information */
-    /* support_t       *p_supportStruct; */
+    support_t       *p_supportStruct;
                                 /* ptr to support struct */
 } pcb_t, *pcb_PTR;
 
