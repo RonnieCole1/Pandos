@@ -10,25 +10,21 @@ pcb_t *currentProc;  /* pointer to the pcb that is in the "running" state */
 int deviceSema4s[MAXDEVICECNT]; 
 
 int main(){
-    
-    
-
     /* Populate the Processor 0 Pass Up Vector */
     passupvector_t temp;
     temp->tlb_refill_handler = (memaddr) uTLB_RefillHandler;
-    temp->tlb_refill_stackPtr = 0x2000.1000;
+    temp->tlb_refill_stackPtr = TOP;
     temp->exception_handler = (memaddr) fooBar;
-    temp->exception_stackPtr = 0x2000.1000;
+    temp->exception_stackPtr = TOP;
 
     /* Initialize PCB and ASL data structures */
     initPcbs();
     initASL();
 
     /* Initialize all Nucleus maintained variables */
-    int procssCnt = 0;
-    int softBlockCnt = 0;
-    pcb_t *readyQue = mkEmptyProcQ();
-    pcb_t *currentProc = NULL;
+    procssCnt = softBlockCnt = 0;
+    readyQue = mkEmptyProcQ();
+    currentProc = NULL;
     int deviceSema4s[MAXDEVICECNT] = 0;
 
     /* Load system-wide Interval Timer with 100 milliseconds */
