@@ -59,21 +59,25 @@ void Wait_for_IO_Device()
 }
 
 /* Sys6 */
-int Get_CPU_Time()
+int Get_CPU_Time(pcb_t p)
 {
+    /*These need moved somewhere*/
     int accumulatedCPUTime;
-    while(currentProc->p_next != NULL)
+    pcb_t *temp = currentProc->p_sibn;
+    /******************************/
+    while(temp->p_sibn != NULL)
     {
-        if(emptyChild(currentProc))
+        accumulatedCPUTime += temp->p_time;
+        if(emptyChild(temp) == FALSE)
         {
-            while(currentProc->p_child->p_sibn != NULL)
+            while(temp->p_child->p_sibn != NULL)
             {
-                accumulatedCPUTime += currentProc->p_sibn->p_time;
-                currentProc = currentProc->p_sibn;
+                accumulatedCPUTime += temp->p_child->p_time;
+                Get_CPU_Time(*temp->p_child);
+                temp->p_child = temp->p_child->p_sibn;
             }
         }
-        accumulatedCPUTime += currentProc->p_time;
-        currentProc = currentProc->p_next
+        temp = temp->p_next;
     }
     s_v0 = accumulatedCPUTime;
     return accumulatedCPUTime;
