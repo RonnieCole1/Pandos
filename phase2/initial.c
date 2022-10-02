@@ -3,7 +3,9 @@
 #include "../h/const.h"
 #include "p2test.c"
 
-/* Declare global variables */
+/* 
+    Declare global variables 
+*/
 int procssCnt;      /* int indicating the number of strated, but not yet terminated processes */
 int softBlockCnt;   /* number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
 pcb_t *readyQue;   /* tail pointer to a queue of pcbs that are in the "ready" state */
@@ -40,6 +42,9 @@ int main(){
     procssCnt++;
 
     currentProc->p_s.s_pc = (memaddr) test; /* test function in p2test */
+
+    insertProcQ(&readyQue, currentProc);
+    currentProc = NULL;
 
     extern void test();
 
