@@ -41,7 +41,7 @@ int main(){
 
     /* Populate the Processor 0 Pass Up Vector */
     passupvector_t *temp;
-    temp = (passupvector_t *) ;
+    temp = (passupvector_t *) PASSUPVECTOR;
     temp->tlb_refill_handler = (memaddr) uTLB_RefillHandler();
     temp->tlb_refill_stackPtr = KERNELSTACK;
     temp->exception_handler = (memaddr) genExceptionHandler();
@@ -81,6 +81,9 @@ int main(){
     scheduler();
 }
 
+/*
+
+*/
 void genExceptionHandler(){
 
 }
