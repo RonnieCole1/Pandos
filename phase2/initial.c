@@ -8,7 +8,7 @@
 
 /************************************ Nucleus Initialization ****************************
  *
- *   cd on  
+ *   
  * 
  *   Authors:
  *      Ronnie Cole
