@@ -8,7 +8,7 @@
 
 /************************************ Nucleus Initialization ****************************
  *
- *   cd on  
+ *   
  * 
  *   Authors:
  *      Ronnie Cole
@@ -64,7 +64,7 @@ int main(){
     /* Instantiate a single process */
     currentProc = allocPcb();
     if(currentProc != NULL){
-        currentProc->p_s.s_sp = RAMTOP
+        currentProc->p_s.s_sp = RAMTOP;
         currentProc->p_s.s_pc = (memaddr) test; /* test function in p2test */
         currentProc->p_s.s_t9 = (memaddr) test;
         currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
@@ -75,7 +75,7 @@ int main(){
         PANIC();
     }
 
-    LDIT();
+    LDIT(INTERVALTMR);
 
     /* Call the Scheduler */
     scheduler();
