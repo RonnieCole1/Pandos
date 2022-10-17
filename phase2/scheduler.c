@@ -7,10 +7,9 @@
 void scheduler() {
     if(emptyProcQ(readyQue))
     {
-        if(procssCnt == 0)
-        [
+        if(procssCnt == 0){
             /*Invoke HAULT*/
-        ]
+        }
         if(procssCnt > 0 && softBlockCnt > 0)
         {
             /*set Status reg to enable interupts and

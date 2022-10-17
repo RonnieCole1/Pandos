@@ -23,7 +23,11 @@
 /* define top of the Nucleus stack page */ 
 #define KERNALSTACK         0x20001000
 
-/* define */
+/* cause register commands */
+#define GETEXECCODE         0x0000007C
+#define CAUSESHIFT          2
+
+/* status register commands */
 #define ALLOFF              0x00000000
 #define USERPON             0x00000008
 #define IEPON               0x00000004

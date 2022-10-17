@@ -26,7 +26,7 @@ int procssCnt;          /* int indicating the number of strated, but not yet ter
 int softBlockCnt;       /* number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
 pcb_t *readyQue;        /* tail pointer to a queue of pcbs that are in the "ready" state */
 pcb_t *currentProc;     /* pointer to the pcb that is in the "running" state */
-int deviceSema4s[MAXDEVICECNT]; 
+int deviceSema4s[MAXDEVICECNT +  + 1]; 
 
 /* 
     Programs entry point performing the Nucleus initialization
@@ -57,7 +57,7 @@ int main(){
     currentProc = NULL;
 
     int i;
-    for(i = 0; i < MAXDEVICECNT; i++){
+    for(i = 0; i < [MAXDEVICECNT + ]; i++){
         deviceSema4s[i] = 0;
     }
 
@@ -85,5 +85,9 @@ int main(){
 
 */
 void genExceptionHandler(){
+    state_PTR oldState;
+    oldState = (state_t *) BIOSDATAPAGE;
+    int temp;
 
+    temp = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 }
