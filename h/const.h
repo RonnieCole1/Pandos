@@ -92,6 +92,9 @@
 #define	PGFAULTEXCEPT	    0
 #define GENERALEXCEPT	    1
 
+/* Exception related constaints */
+#define INTERUPTHANDLER
+
 /* SYSCALL related constaints */
 #define CREATEPROCESS       1
 #define TERMINATEPROCESS    2

@@ -85,5 +85,27 @@ int main(){
 
 */
 void genExceptionHandler(){
+    state_PTR exeState = BIOSDATAPAGE;
+    (exeState.cause & GENERALEXCEPT) >> /*something*/
 
+    if(Cause.ExcCode == INTERUPTHANDLER)
+    {
+        /*Pass along to interput handler (not yet implemented)*/
+    }
+    /*TLB Exceptions*/
+    if(Cause.ExcCode <= 3 && Cause.ExcCode >= 1)
+    {
+        uTLB_RefillHandler();
+    }
+    /*Program Traps*/
+    if((Cause.ExcCode <= 4 && Cause.ExcCode >= 7 )
+    && (Cause.ExcCode <= 9 && Cause.ExcCode >= 12 ))
+    {
+        /*Pass along to program trap handler*/
+    }
+    /*SYSCALL*/
+    if(Cause.ExcCode == 8)
+    {
+        SYSCALL(/*SYSNUM*/);
+    }
 }

@@ -2,42 +2,11 @@
 #include "../h/asl.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "initial.c"
+#include "../Phase2/initial.c"
+#include "../Phase2/scheduler.c"
+#include "/usr/include/umps3/umps/libumps.h"
 
-void exceptionHandler()
-{
-    if(/*Examine State Reg to check if in Kernal*/)
-    {
-        
-    } else {
-        /* I want to do this as a switch case... but how?*/
-        /*Interupts*/
-        if(Cause.ExcCode == 0)
-        {
-
-        }
-        /*TLB Exceptions*/
-        if(Cause.ExcCode <= 3 && Cause.ExcCode >= 1)
-        {
-            
-        }
-        /*Program Traps*/
-        if((Cause.ExcCode <= 4 && Cause.ExcCode >= 7 )
-        && (Cause.ExcCode <= 9 && Cause.ExcCode >= 12 ))
-        {
-            
-        }
-        /*SYSCALL*/
-        if(Cause.ExcCode == 8)
-        {
-            /* How to define SYSCall?*/
-            /*SYSCALL(x,x,x,x)*/
-        }
-    }
-}
-/*These fields don't match the book, but it
-comes as close as I could...*/
-void SYSCALL(int SYSNUM, int sema4, blah, blah) 
+void SYSCALL(SYSNUM) 
 {
     switch(SYSNUM) 
     {
@@ -59,7 +28,7 @@ void SYSCALL(int SYSNUM, int sema4, blah, blah)
             void Get_SUPPORT_Data();
     }
 
-    LDST();
+     Load_State(p);
 }
 
 /*SYS1*/
@@ -67,8 +36,7 @@ void Create_ProcessP()
 {
     /*Initialize fields of p*/
     pcb_t *p;
-    /*Initialize fields of p*/
-    p->p_s = s_a1;
+    p->p_s = p->p_s.s_a1;
     p->p_supportStruct = s_a2;
     insertProcQ(readyQue, p);
     insertChild(currentProc, p);
@@ -79,10 +47,19 @@ void Create_ProcessP()
 /* Sys2 */
 void Terminate_Process()
 {
-    while(emptyChild(currentProc) == FALSE)
+    while(emptyProcQ(currentProc) == FALSE)
     {
-        removeChild(currentProc);
-        Terminate_Process();
+        Terminate_Process(removeChild(currentProc));
+    }
+    if(emptyChild(currentProc))
+    {
+        currentProc = currentProc->p_prnt
+    }
+    if()
+    {
+
+    } else {
+
     }
     currentProc = NULL;
 }
@@ -123,35 +100,17 @@ void Wait_for_IO_Device()
 /* Sys6 */
 int Get_CPU_Time(pcb_t p)
 {
-    /*These need moved somewhere*/
-    int accumulatedCPUTime;
-    pcb_t *temp = currentProc->p_sibn;
-    /******************************/
-    while(temp->p_sibn != NULL)
-    {
-        accumulatedCPUTime += temp->p_time;
-        if(emptyChild(temp) == FALSE)
-        {
-            while(temp->p_child->p_sibn != NULL)
-            {
-                accumulatedCPUTime += temp->p_child->p_time;
-                Get_CPU_Time(*temp->p_child);
-                temp->p_child = temp->p_child->p_sibn;
-            }
-        }
-        temp = temp->p_next;
-    }
-    s_v0 = accumulatedCPUTime;
-    return accumulatedCPUTime;
+    accumulatedTime = currentProc.p_time;
 }
 
 /* Sys7 */
 void Wait_For_Clock()
 {
     /* Define pseudoClockSema4 */
-    SYSCALL(PASSEREN, pseudoClockSema4, 0, 0);
+    wait(pseudoClockSema4);
     /*Do this every 100ms*/
-    SYSCALL(VERHOGEN, pseudoClockSema4, 0, 0);
+    signal(pseudoClockSema4);
+    /********************/
     BlockedSYS(currentProc);
 }
 
@@ -165,8 +124,8 @@ void Get_SUPPORT_Data()
 void BlockedSYS(pcb_t p)
 {
     /*Refer to 3.5.11 to complete this code */
-    s_pc = s_pc + 4;
-    p->p_s = /*BOISDATAPAGESTATE*/
+    p.p_s.s_pc = p.p_s.s_pc + 4;
+    p->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
     p->p_time = p->p_time + intervaltimer;
     insertBlocked(currentProc);
     scheduler()
