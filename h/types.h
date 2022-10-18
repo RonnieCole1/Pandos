@@ -11,6 +11,7 @@
 
 typedef signed int cpu_t;
 
+typedef signed double accumulatedTime;
 
 typedef unsigned int memaddr;
 
