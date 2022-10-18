@@ -85,8 +85,9 @@ int main(){
 
 */
 void genExceptionHandler(){
-    state_PTR exeState = BIOSDATAPAGE;
-    (exeState.cause & GENERALEXCEPT) >> /*something*/
+    state_PTR oldState = (state_t *) BIOSDATAPAGE;
+    int temp;
+    temp = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
     if(Cause.ExcCode == INTERUPTHANDLER)
     {
