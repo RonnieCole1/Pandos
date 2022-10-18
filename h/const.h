@@ -8,8 +8,8 @@
  ****************************************************************************/
 
 /* Hardware & software constants */
-#define PAGESIZE		        4096			/* page size in bytes	*/
-#define WORDLEN			        4				  /* word size in bytes	*/
+#define PAGESIZE		    4096			/* page size in bytes	*/
+#define WORDLEN			    4				  /* word size in bytes	*/
 
 /* define MAXPROC */
 #define MAXPROC             20
@@ -27,7 +27,7 @@
 #define GETEXECCODE         0x0000007C
 #define CAUSESHIFT          2
 
-/* define */
+/* status register commands */
 #define ALLOFF              0x00000000
 #define USERPON             0x00000008
 #define IEPON               0x00000004
@@ -36,52 +36,52 @@
 #define TEBITON             0x00000000
 
 /* timer, timescale, TOD-LO and other bus regs */
-#define RAMBASEADDR		      0x10000000
-#define RAMBASESIZE		      0x10000004
-#define TODLOADDR		        0x1000001C
-#define INTERVALTMR		      0x10000020	
-#define TIMESCALEADDR	      0x10000024
+#define RAMBASEADDR		    0x10000000
+#define RAMBASESIZE		    0x10000004
+#define TODLOADDR		    0x1000001C
+#define INTERVALTMR		    0x10000020	
+#define TIMESCALEADDR	    0x10000024
 
 /* utility constants */
-#define	TRUE			          1
-#define	FALSE			          0
-#define HIDDEN			        static
-#define EOS				          '\0'
+#define	TRUE			    1
+#define	FALSE			    0
+#define HIDDEN			    static
+#define EOS				    '\0'
 
-#define NULL 			          ((void *)0xFFFFFFFF)
+#define NULL 			    ((void *)0xFFFFFFFF)
 
 /* device interrupts */
-#define DISKINT			        3
-#define FLASHINT 		        4
-#define NETWINT 		        5
-#define PRNTINT 		        6
-#define TERMINT			        7
+#define DISKINT			    3
+#define FLASHINT 		    4
+#define NETWINT 		    5
+#define PRNTINT 		    6
+#define TERMINT			    7
 
-#define DEVINTNUM		        5		  /* interrupt lines used by devices */
-#define DEVPERINT		        8		  /* devices per interrupt line */
-#define DEVREGLEN		        4		  /* device register field length in bytes, and regs per dev */	
+#define DEVINTNUM		    5		  /* interrupt lines used by devices */
+#define DEVPERINT		    8		  /* devices per interrupt line */
+#define DEVREGLEN		    4		  /* device register field length in bytes, and regs per dev */	
 #define DEVREGSIZE	        16 		/* device register size in bytes */
 
 /* device register field number for non-terminal devices */
-#define STATUS			        0
-#define COMMAND			        1
-#define DATA0			          2
-#define DATA1			          3
+#define STATUS			    0
+#define COMMAND			    1
+#define DATA0			    2
+#define DATA1			    3
 
 /* device register field number for terminal devices */
-#define RECVSTATUS  	      0
-#define RECVCOMMAND 	      1
-#define TRANSTATUS  	      2
-#define TRANCOMMAND 	      3
+#define RECVSTATUS  	    0
+#define RECVCOMMAND 	    1
+#define TRANSTATUS  	    2
+#define TRANCOMMAND 	    3
 
 /* device common STATUS codes */
-#define UNINSTALLED		      0
-#define READY			          1
-#define BUSY			          3
+#define UNINSTALLED		    0
+#define READY			    1
+#define BUSY			    3
 
 /* device common COMMAND codes */
-#define RESET			          0
-#define ACK				          1
+#define RESET			    0
+#define ACK				    1
 
 /* Memory related constants */
 #define KSEG0               0x00000000
@@ -90,11 +90,11 @@
 #define KUSEG               0x80000000
 #define RAMSTART            0x20000000
 #define BIOSDATAPAGE        0x0FFFF000
-#define	PASSUPVECTOR	      0x0FFFF900
+#define	PASSUPVECTOR	    0x0FFFF900
 
 /* Exceptions related constants */
-#define	PGFAULTEXCEPT	      0
-#define GENERALEXCEPT	      1
+#define	PGFAULTEXCEPT	    0
+#define GENERALEXCEPT	    1
 
 /* Exception related constaints */
 #define INTERUPTHANDLER

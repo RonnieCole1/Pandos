@@ -10,6 +10,7 @@
 #include "../h/const.h"
 
 typedef signed int cpu_t;
+
 typedef signed double accumulatedTime;
 
 typedef unsigned int memaddr;
