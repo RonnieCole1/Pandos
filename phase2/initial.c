@@ -4,6 +4,7 @@
 #include "../h/exceptions.h"
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
+#include "/usr/include/umps3/umps/libumps.h"
 #include "p2test.c"
 
 /************************************ Nucleus Initialization ****************************
