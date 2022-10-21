@@ -55,6 +55,11 @@ Load_State(state_PTR currentProccess)
     LDST(&(currentProc.p_s));
 }
 
+myLDST(pcb_t* currProc){
+    proc = currProc;
+    LDST(&currProc->p_s);
+}
+
 Move_Process(pcb_PTR p)
 {
     removeProcQ(readyQue);
