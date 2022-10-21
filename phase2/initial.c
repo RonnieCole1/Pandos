@@ -26,17 +26,16 @@ int procssCnt;          /* int indicating the number of strated, but not yet ter
 int softBlockCnt;       /* number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
 pcb_t *readyQue;        /* tail pointer to a queue of pcbs that are in the "ready" state */
 pcb_t *currentProc;     /* pointer to the pcb that is in the "running" state */
-int deviceSema4s[MAXDEVICECNT +  + 1]; 
+int deviceSema4s[MAXDEVICECNT]; 
 
 /* 
     Programs entry point performing the Nucleus initialization
 */
 int main(){
     /* Load system-wide interval timer */
-    int RAMTOP;
     devregarea_t *top;
     top = (devregarea_t *) RAMBASEADDR;
-    RAMTOP = top->rambase + top->ramsize;
+    int ramtop = top->rambase + top->ramsize;
     top->intervaltimer = 100;               /* 100 milliseconds */
 
     /* Populate the Processor 0 Pass Up Vector */
@@ -57,9 +56,11 @@ int main(){
     currentProc = NULL;
 
     int i;
-    for(i = 0; i < [MAXDEVICECNT + ]; i++){
+    for(i = 0; i < [MAXDEVICECNT]; i++){
         deviceSema4s[i] = 0;
     }
+
+    LDIT(INTERVALTMR);
 
     /* Instantiate a single process */
     currentProc = allocPcb();
@@ -75,10 +76,11 @@ int main(){
         PANIC();
     }
 
-    LDIT(INTERVALTMR);
-
     /* Call the Scheduler */
     scheduler();
+
+    /* End of main */
+    return (0);
 }
 
 /*
@@ -93,17 +95,20 @@ void genExceptionHandler(){
     {
         /*Pass along to interput handler (not yet implemented)*/
     }
+
     /*TLB Exceptions*/
     if(Cause.ExcCode <= 3 && Cause.ExcCode >= 1)
     {
         uTLB_RefillHandler();
     }
+
     /*Program Traps*/
     if((Cause.ExcCode <= 4 && Cause.ExcCode >= 7 )
     && (Cause.ExcCode <= 9 && Cause.ExcCode >= 12 ))
     {
         /*Pass along to program trap handler*/
     }
+
     /*SYSCALL*/
     if(Cause.ExcCode == 8)
     {
