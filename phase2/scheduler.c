@@ -1,7 +1,9 @@
 #include "../h/pcb.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../Phase2/initial.c"
+#include "../h/exceptions.h"
+#include "../h/scheduler.h"
+#include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 
@@ -51,6 +53,11 @@ Load_State(state_PTR currentProccess)
 
     currentProc.p_s = currentProccess;
     LDST(&(currentProc.p_s));
+}
+
+myLDST(pcb_t* currProc){
+    proc = currProc;
+    LDST(&currProc->p_s);
 }
 
 Move_Process(pcb_PTR p)

@@ -2,8 +2,9 @@
 #include "../h/asl.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../Phase2/initial.c"
-#include "../Phase2/scheduler.c"
+#include "../h/exceptions.h"
+#include "../h/scheduler.h"
+#include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 void SYSCALL(SYSNUM) 

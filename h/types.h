@@ -29,32 +29,46 @@ typedef struct {
 #define t_transm_status		d_data0
 #define t_transm_command	d_data1
 
+/* process context */
+typedef struct context_t {
+	/* process context fields */
+	unsigned int 	c_stackPtr,		/* stack pointer variable */
+				 	c_status,		/* status reg value */
+				 	c_pc;			/* PC address */
+} context_t;
+
+typedef struct support_t {
+	int 			sup_asid;		/* Process Id (asid) */
+	state_t			sup_exceptState[2];	/* Stored excpt states */
+	context_t		sup_exceptContext[2];	/* pass up contexts */
+} support_t;
+
 
 /* Bus Register Area */
 typedef struct {
-	unsigned int rambase;
-	unsigned int ramsize;
-	unsigned int execbase;
-	unsigned int execsize;
-	unsigned int bootbase;
-	unsigned int bootsize;
-	unsigned int todhi;
-	unsigned int todlo;
-	unsigned int intervaltimer;
-	unsigned int timescale;
-	unsigned int TLB_Floor_Addr;
-	unsigned int inst_dev[DEVINTNUM];
-	unsigned int interrupt_dev[DEVINTNUM];
-	device_t	devreg[DEVINTNUM * DEVPERINT];
+	unsigned int 	rambase;
+	unsigned int 	ramsize;
+	unsigned int 	execbase;
+	unsigned int 	execsize;
+	unsigned int 	bootbase;
+	unsigned int 	bootsize;
+	unsigned int 	todhi;
+	unsigned int 	todlo;
+	unsigned int 	intervaltimer;
+	unsigned int 	timescale;
+	unsigned int 	TLB_Floor_Addr;
+	unsigned int 	inst_dev[DEVINTNUM];
+	unsigned int 	interrupt_dev[DEVINTNUM];
+	device_t		devreg[DEVINTNUM * DEVPERINT];
 } devregarea_t;
 
 
 /* Pass Up Vector */
 typedef struct passupvector {
-    unsigned int tlb_refll_handler;
-    unsigned int tlb_refll_stackPtr;
-    unsigned int execption_handler;
-    unsigned int exception_stackPtr;
+    unsigned int 	tlb_refll_handler;
+    unsigned int 	tlb_refll_stackPtr;
+    unsigned int 	execption_handler;
+    unsigned int 	exception_stackPtr;
 } passupvector_t;
 
 
@@ -69,7 +83,7 @@ typedef struct state_t {
 } state_t, *state_PTR;
 
 /* process control block type */
-typedef struct pcb_t{
+typedef struct pcb_t {
     /* process queue fields */
     struct pcb_t    *p_next,    /* pointer to next entry */
                     *p_prev,    /* pointer to prev entry */
@@ -91,7 +105,7 @@ typedef struct pcb_t{
 } pcb_t, *pcb_PTR;
 
 /* semaphore descriptor type */
-typedef struct semd_t{
+typedef struct semd_t {
     struct  semd_t  *s_next;        /* next element on the ASL */
     int             *s_semAdd;      /* pointer to the semaphore */
     pcb_t           *s_procQ;       /* tail pointer to a process queue */
