@@ -159,7 +159,7 @@ pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
     }
 
     /* Check if there is a single element. If there is, just remove it. */
-    if((*tp)==p)
+    if((*tp->p_next)==p)
     {
         return removeProcQ(*tp);
     }

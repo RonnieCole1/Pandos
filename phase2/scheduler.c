@@ -1,9 +1,7 @@
 #include "../h/pcb.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../h/exceptions.h"
-#include "../h/scheduler.h"
-#include "../h/interrupts.h"
+#include "../Phase2/initial.c"
 #include "/usr/include/umps3/umps/libumps.h"
 
 
@@ -12,8 +10,8 @@
 
 void scheduler() {
 
-    state_t currentState;
-    currentState = s_status;
+    state_t iniState;
+    pcb_PTR p;
 
     if(emptyProcQ(readyQue))
     {
@@ -25,39 +23,49 @@ void scheduler() {
         {
             if(softBlockCnt != 0)
             {
-                /*Set status register to enable interupts and either
-                disable the PLT or load it with a very large value*/
+                
+                currentProc = NULL;
 
-                WAIT();
+                setTimer(DISABLE);
+
+                iniState = ALLOFF | IEPON | IMON | TEBITON;
+                LoadState(iniState);
+                finalMSG("", FALSE);
             }
             else
             {
-                PANIC();
+                finalMSG("", TRUE);
             }
         }
     }
-    pcb_t *p
+
     Move_Process(p);
-
-    /*Load 5ms on PLT*/
-
+    setTimer(TIMESLICE); /* Time slice is 5ms */
     LoadState(currentProc) /*Load Processor State*/
-
-
 }
 
 Load_State(state_PTR currentProccess)
 {
-    SLVT(intervaltimer);
+    STCK(intervaltimer);
     setTimer(pseudoClockSema4);
+
 
     currentProc.p_s = currentProccess;
     LDST(&(currentProc.p_s));
 }
 
-myLDST(pcb_t* currProc){
-    proc = currProc;
-    LDST(&currProc->p_s);
+/* Stealing this idea from Mikey. It seemed cool */
+finalMSG(char msg[], bool Bstatus)
+{
+    if(Bstatus)
+    {
+        PANIC();
+    }
+    if(Bstatus == FALSE)
+    {
+        WAIT();
+    }
+    printf(char);
 }
 
 Move_Process(pcb_PTR p)

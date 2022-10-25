@@ -4,7 +4,6 @@
 #include "../h/exceptions.h"
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
-#include "/usr/include/umps3/umps/libumps.h"
 #include "p2test.c"
 
 /************************************ Nucleus Initialization ****************************
@@ -27,16 +26,17 @@ int procssCnt;          /* int indicating the number of strated, but not yet ter
 int softBlockCnt;       /* number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
 pcb_t *readyQue;        /* tail pointer to a queue of pcbs that are in the "ready" state */
 pcb_t *currentProc;     /* pointer to the pcb that is in the "running" state */
-int deviceSema4s[MAXDEVICECNT]; 
+int deviceSema4s[MAXDEVICECNT +  + 1]; 
 
 /* 
     Programs entry point performing the Nucleus initialization
 */
 int main(){
     /* Load system-wide interval timer */
+    int RAMTOP;
     devregarea_t *top;
     top = (devregarea_t *) RAMBASEADDR;
-    int ramtop = top->rambase + top->ramsize;
+    RAMTOP = top->rambase + top->ramsize;
     top->intervaltimer = 100;               /* 100 milliseconds */
 
     /* Populate the Processor 0 Pass Up Vector */
@@ -57,11 +57,9 @@ int main(){
     currentProc = NULL;
 
     int i;
-    for(i = 0; i < [MAXDEVICECNT]; i++){
+    for(i = 0; i < [MAXDEVICECNT + ]; i++){
         deviceSema4s[i] = 0;
     }
-
-    LDIT(INTERVALTMR);
 
     /* Instantiate a single process */
     currentProc = allocPcb();
@@ -77,11 +75,10 @@ int main(){
         PANIC();
     }
 
+    LDIT(INTERVALTMR);
+
     /* Call the Scheduler */
     scheduler();
-
-    /* End of main */
-    return (0);
 }
 
 /*
@@ -94,25 +91,18 @@ void genExceptionHandler(){
 
     if(Cause.ExcCode == INTERUPTHANDLER)
     {
-        /*Pass along to interput handler (not yet implemented)*/
+        interuptHNDLR();
     }
-
     /*TLB Exceptions*/
-    if(Cause.ExcCode <= 3 && Cause.ExcCode >= 1)
+    if(Cause.ExcCode <= TLBEXCEPTS)
     {
         uTLB_RefillHandler();
     }
-
-    /*Program Traps*/
-    if((Cause.ExcCode <= 4 && Cause.ExcCode >= 7 )
-    && (Cause.ExcCode <= 9 && Cause.ExcCode >= 12 ))
+        /*SYSCALL*/
+    if(Cause.ExcCode == SYSCALLEXECPTS )
     {
-        /*Pass along to program trap handler*/
+        SYSCALL();
     }
 
-    /*SYSCALL*/
-    if(Cause.ExcCode == 8)
-    {
-        SYSCALL(/*SYSNUM*/);
-    }
+    programTRPHNDLR();
 }
