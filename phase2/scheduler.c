@@ -54,7 +54,7 @@ void scheduler() {
     LoadState(currentProc) /*Load Processor State*/
 }
 
-Load_State(state_PTR currentProccess)
+void Load_State(state_PTR currentProcess)
 {
     STCK(intervaltimer);
     setTimer(pseudoClockSema4);
@@ -64,12 +64,12 @@ Load_State(state_PTR currentProccess)
     LDST(&(currentProc.p_s));
 }
 
-myLDST(pcb_t *currProc){
+void myLDST(pcb_t *currProc){
     proc = currProc;
     LDST(&(currProc->p_s));
 
 /* Stealing this idea from Mikey. It seemed cool */
-finalMSG(char msg[], bool Bstatus)
+void finalMSG(char msg[], bool Bstatus)
 {
     if(Bstatus)
     {
@@ -82,7 +82,7 @@ finalMSG(char msg[], bool Bstatus)
     printf(char);
 }
 
-Move_Process(pcb_PTR p)
+void Move_Process(pcb_PTR p)
 {
     removeProcQ(readyQue);
     insertChild(currentProc, p);
