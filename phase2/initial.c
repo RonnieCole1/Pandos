@@ -22,11 +22,11 @@ extern void uTLB_RefillHandler();
 /* 
     Declare global variables 
 */
-int procssCnt;          /* int indicating the number of strated, but not yet terminated processes */
+int processCnt;          /* int indicating the number of strated, but not yet terminated processes */
 int softBlockCnt;       /* number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
 pcb_t *readyQue;        /* tail pointer to a queue of pcbs that are in the "ready" state */
 pcb_t *currentProc;     /* pointer to the pcb that is in the "running" state */
-int deviceSema4s[MAXDEVICECNT +  + 1]; 
+int deviceSema4s[MAXDEVICECNT]; 
 
 /* 
     Programs entry point performing the Nucleus initialization
@@ -69,7 +69,7 @@ int main(){
         currentProc->p_s.s_t9 = (memaddr) test;
         currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
         insertProcQ(&readyQue, currentProc);
-        procssCnt += 1;
+        processCnt += 1;
         currentProc = NULL;
     } else{
         PANIC();
@@ -89,18 +89,18 @@ void genExceptionHandler(){
     int temp;
     temp = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
-    if(Cause.ExcCode == INTERUPTHANDLER)
-    {
-        interuptHNDLR();
+    if(temp == INTERRUPTHANDLER){
+        /*Pass along to interput handler (not yet implemented)*/
+        interruptHNDLR();
     }
+
     /*TLB Exceptions*/
-    if(Cause.ExcCode <= TLBEXCEPTS)
-    {
+    if(temp <= TLBEXCEPTS){
         uTLB_RefillHandler();
     }
-        /*SYSCALL*/
-    if(Cause.ExcCode == SYSCALLEXECPTS )
-    {
+
+    /*SYSCALL*/
+    if(temp == SYSCALLEXECPTS){
         SYSCALL();
     }
 

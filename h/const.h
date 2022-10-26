@@ -98,7 +98,7 @@
 #define GENERALEXCEPT	    1
 
 /* Exception related constaints */
-#define INTERUPTHANDLER     0
+#define INTERRUPTHANDLER    0
 #define TLBEXCEPTS          3
 #define SYSCALLEXECPTS      8
 

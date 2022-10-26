@@ -4,7 +4,15 @@
 #include "../Phase2/initial.c"
 #include "/usr/include/umps3/umps/libumps.h"
 
+/* global variables maintaining time usage*/
+cpu_t TODStarted;
+cpu_t currentTOD;
 
+/* global variables from initial.c */
+extern int processCnt;
+extern int softBlockCnt;
+extern pcb_t *readyQue;
+extern pcb_t *currentProc;
 
 /*We need to implement a clock...*/
 
@@ -17,7 +25,7 @@ void scheduler() {
     {
         if(procssCnt == 0)
         {
-            HAULT();
+            HALT();
         }
         else
         {
@@ -29,7 +37,7 @@ void scheduler() {
                 setTimer(DISABLE);
 
                 iniState = ALLOFF | IEPON | IMON | TEBITON;
-                LoadState(iniState);
+                Load_State(iniState);
                 finalMSG("", FALSE);
             }
             else
@@ -40,6 +48,8 @@ void scheduler() {
     }
 
     Move_Process(p);
+
+    /*Load 5ms on PLT*/
     setTimer(TIMESLICE); /* Time slice is 5ms */
     LoadState(currentProc) /*Load Processor State*/
 }
@@ -53,6 +63,10 @@ Load_State(state_PTR currentProccess)
     currentProc.p_s = currentProccess;
     LDST(&(currentProc.p_s));
 }
+
+myLDST(pcb_t *currProc){
+    proc = currProc;
+    LDST(&(currProc->p_s));
 
 /* Stealing this idea from Mikey. It seemed cool */
 finalMSG(char msg[], bool Bstatus)
