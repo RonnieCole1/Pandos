@@ -2,9 +2,8 @@
 #include "../h/asl.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../h/exceptions.h"
+#include "../h/initial.h"
 #include "../h/scheduler.h"
-#include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* global variables from initial.c */
@@ -79,7 +78,6 @@ pcb_t* wait(sema4)
         insertBlocked(&sema4, currentProc);
     }
     BlockedSYS(p);
-    return currentProc;
 }
 
 /* Sys4 Verhogen */
@@ -90,7 +88,6 @@ pcb_t* signal(sema4)
         pcb_PTR temp = removeBlocked(&sema4);
         insertProcQ(&readyQue, temp);
     }
-    return currentProc;
 }
 
 /* Sys5 */
@@ -111,10 +108,12 @@ int Get_CPU_Time(pcb_t p)
 void Wait_For_Clock()
 {
     /* Define pseudoClockSema4 */
-    wait(pseudoClockSema4);
-    /*Do this every 100ms*/
-    signal(pseudoClockSema4);
-    /********************/
+    pseudoClockSema4--;
+    if(pseudoClockSema4 < 0)
+    {
+        pcb_t *p = removeProcQ(&(pseudoClockSema4));
+        insertBlocked(&(pseudoClockSema4),p);
+    }
     BlockedSYS(currentProc);
 }
 
@@ -135,3 +134,5 @@ void BlockedSYS(pcb_t p)
     scheduler();
     /****************************************/
 }
+
+/* Passup Or Die */

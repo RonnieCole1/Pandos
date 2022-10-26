@@ -4,7 +4,6 @@
 #include "../h/exceptions.h"
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
-#include "/usr/include/umps3/umps/libumps.h"
 #include "p2test.c"
 
 /************************************ Nucleus Initialization ****************************
@@ -34,9 +33,10 @@ int deviceSema4s[MAXDEVICECNT];
 */
 int main(){
     /* Load system-wide interval timer */
+    int RAMTOP;
     devregarea_t *top;
     top = (devregarea_t *) RAMBASEADDR;
-    int ramtop = top->rambase + top->ramsize;
+    RAMTOP = top->rambase + top->ramsize;
     top->intervaltimer = 100;               /* 100 milliseconds */
 
     /* Populate the Processor 0 Pass Up Vector */
@@ -57,11 +57,9 @@ int main(){
     currentProc = NULL;
 
     int i;
-    for(i = 0; i < [MAXDEVICECNT]; i++){
+    for(i = 0; i < [MAXDEVICECNT + ]; i++){
         deviceSema4s[i] = 0;
     }
-
-    LDIT(INTERVALTMR);
 
     /* Instantiate a single process */
     currentProc = allocPcb();
@@ -77,11 +75,10 @@ int main(){
         PANIC();
     }
 
+    LDIT(INTERVALTMR);
+
     /* Call the Scheduler */
     scheduler();
-
-    /* End of main */
-    return (0);
 }
 
 /*
@@ -94,20 +91,18 @@ void genExceptionHandler(){
 
     if(temp == INTERRUPTHANDLER){
         /*Pass along to interput handler (not yet implemented)*/
+        interruptHNDLR();
     }
 
     /*TLB Exceptions*/
-    if(temp <= 3 && temp >= 1){
+    if(temp <= TLBEXCEPTS){
         uTLB_RefillHandler();
     }
 
-    /*Program Traps*/
-    if((temp <= 4 && temp >= 7 ) && (temp <= 9 && temp >= 12 )){
-        /*Pass along to program trap handler*/
+    /*SYSCALL*/
+    if(temp == SYSCALLEXECPTS){
+        SYSCALL();
     }
 
-    /*SYSCALL*/
-    if(temp == 8){
-        SYSCALL(/* SYSNUM */);
-    }
+    programTRPHNDLR();
 }

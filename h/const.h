@@ -41,6 +41,7 @@
 #define TODLOADDR		    0x1000001C
 #define INTERVALTMR		    0x10000020	
 #define TIMESCALEADDR	    0x10000024
+#define DISABLE             0xFFFFFFFF
 
 /* utility constants */
 #define	TRUE			    1
@@ -97,7 +98,9 @@
 #define GENERALEXCEPT	    1
 
 /* Exception related constaints */
-#define INTERRUPTHANDLER     0
+#define INTERRUPTHANDLER    0
+#define TLBEXCEPTS          3
+#define SYSCALLEXECPTS      8
 
 /* SYSCALL related constaints */
 #define CREATEPROCESS       1
