@@ -11,4 +11,7 @@
 *       Joe Pinkerton
 */
 
+extern int main();
+extern void genExceptionHandler();
+
 #endif
