@@ -97,7 +97,7 @@
 #define GENERALEXCEPT	    1
 
 /* Exception related constaints */
-#define INTERUPTHANDLER
+#define INTERRUPTHANDLER     0
 
 /* SYSCALL related constaints */
 #define CREATEPROCESS       1

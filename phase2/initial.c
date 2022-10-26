@@ -23,7 +23,7 @@ extern void uTLB_RefillHandler();
 /* 
     Declare global variables 
 */
-int procssCnt;          /* int indicating the number of strated, but not yet terminated processes */
+int processCnt;          /* int indicating the number of strated, but not yet terminated processes */
 int softBlockCnt;       /* number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
 pcb_t *readyQue;        /* tail pointer to a queue of pcbs that are in the "ready" state */
 pcb_t *currentProc;     /* pointer to the pcb that is in the "running" state */
@@ -71,7 +71,7 @@ int main(){
         currentProc->p_s.s_t9 = (memaddr) test;
         currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
         insertProcQ(&readyQue, currentProc);
-        procssCnt += 1;
+        processCnt += 1;
         currentProc = NULL;
     } else{
         PANIC();
@@ -92,27 +92,22 @@ void genExceptionHandler(){
     int temp;
     temp = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
-    if(Cause.ExcCode == INTERUPTHANDLER)
-    {
+    if(temp == INTERRUPTHANDLER){
         /*Pass along to interput handler (not yet implemented)*/
     }
 
     /*TLB Exceptions*/
-    if(Cause.ExcCode <= 3 && Cause.ExcCode >= 1)
-    {
+    if(temp <= 3 && temp >= 1){
         uTLB_RefillHandler();
     }
 
     /*Program Traps*/
-    if((Cause.ExcCode <= 4 && Cause.ExcCode >= 7 )
-    && (Cause.ExcCode <= 9 && Cause.ExcCode >= 12 ))
-    {
+    if((temp <= 4 && temp >= 7 ) && (temp <= 9 && temp >= 12 )){
         /*Pass along to program trap handler*/
     }
 
     /*SYSCALL*/
-    if(Cause.ExcCode == 8)
-    {
-        SYSCALL(/*SYSNUM*/);
+    if(temp == 8){
+        SYSCALL(/* SYSNUM */);
     }
 }

@@ -7,6 +7,13 @@
 #include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
+/* global variables from initial.c */
+extern int processCnt;
+extern int softBlockCnt;
+extern pcb_t *readyQue;
+extern pcb_t *currentProc;
+extern int deviceSema4s[MAXDEVICECNT];
+
 void SYSCALL(SYSNUM) 
 {
     switch(SYSNUM) 
@@ -30,6 +37,7 @@ void SYSCALL(SYSNUM)
     }
 
      Load_State(p);
+     PANIC();
 }
 
 /*SYS1*/
@@ -48,31 +56,27 @@ void Create_ProcessP()
 /* Sys2 */
 void Terminate_Process()
 {
-    while(emptyProcQ(currentProc) == FALSE)
-    {
-        Terminate_Process(removeChild(currentProc));
-    }
-    if(emptyChild(currentProc))
-    {
-        currentProc = currentProc->p_prnt
-    }
-    if()
-    {
-
-    } else {
+    if(emptyChild(currentProc)){
+        /* current process has no children */
+        outChild(currentProc);
+        freePcb(currentProc);
+        --processCnt;
+    } else{
 
     }
+
+    /* no current process anymore */
     currentProc = NULL;
+    scheduler();
 }
 
 /* Sys3 Passeren*/
 pcb_t* wait(sema4)
 {
     sema4--;
-    if(sema4 < 0)
-    {
+    if(sema4 < 0){
         pcb_t *p = removeProcQ(&(sema4));
-        insertBlocked(&(sema4),p);
+        insertBlocked(&sema4, currentProc);
     }
     BlockedSYS(p);
     return currentProc;
@@ -82,10 +86,9 @@ pcb_t* wait(sema4)
 pcb_t* signal(sema4)
 {
     sema4++;
-    if(sema4 >= 0)
-    {
-        pcb_t *temp = removedBlocked(&(sema4));
-        insertProcQ(temp, &(readyQue));
+    if(sema4 <= 0){
+        pcb_PTR temp = removeBlocked(&sema4);
+        insertProcQ(&readyQue, temp);
     }
     return currentProc;
 }
@@ -129,6 +132,6 @@ void BlockedSYS(pcb_t p)
     p->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
     p->p_time = p->p_time + intervaltimer;
     insertBlocked(currentProc);
-    scheduler()
+    scheduler();
     /****************************************/
 }

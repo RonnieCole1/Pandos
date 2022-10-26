@@ -6,7 +6,15 @@
 #include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
+/* global variables maintaining time usage*/
+cpu_t TODStarted;
+cpu_t currentTOD;
 
+/* global variables from initial.c */
+extern int processCnt;
+extern int softBlockCnt;
+extern pcb_t *readyQue;
+extern pcb_t *currentProc;
 
 /*We need to implement a clock...*/
 
@@ -19,7 +27,7 @@ void scheduler() {
     {
         if(procssCnt == 0)
         {
-            HAULT();
+            HALT();
         }
         else
         {
@@ -32,6 +40,7 @@ void scheduler() {
             }
             else
             {
+                /* deadlock */
                 PANIC();
             }
         }
@@ -40,10 +49,7 @@ void scheduler() {
     Move_Process(p);
 
     /*Load 5ms on PLT*/
-
-    LoadState(currentProc) /*Load Processor State*/
-
-
+    Load_State(currentProc);     /*Load Processor State*/
 }
 
 Load_State(state_PTR currentProccess)
@@ -55,9 +61,9 @@ Load_State(state_PTR currentProccess)
     LDST(&(currentProc.p_s));
 }
 
-myLDST(pcb_t* currProc){
+myLDST(pcb_t *currProc){
     proc = currProc;
-    LDST(&currProc->p_s);
+    LDST(&(currProc->p_s));
 }
 
 Move_Process(pcb_PTR p)
