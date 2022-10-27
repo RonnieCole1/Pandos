@@ -6,6 +6,16 @@
 #include "../h/scheduler.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
+/********************************** Exception Handling ****************************
+ *
+ *   
+ * 
+ *   Authors:
+ *      Ronnie Cole
+ *      Joe Pinkerton
+ *      Joseph Counts
+*/
+
 /* global variables from initial.c */
 extern int processCnt;
 extern int softBlockCnt;
