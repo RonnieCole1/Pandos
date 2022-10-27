@@ -53,20 +53,7 @@ void scheduler() {
             }
         }
     }
-
-    // Move_Process(p);
 }
-
-/*void Load_State(state_PTR currentProcess)
-{
-    STCK(intervaltimer);
-    setTimer(pseudoClockSema4);
-
-
-    currentProc.p_s = currentProccess;
-    LDST(&(currentProc.p_s));
-}*/
-
 void myLDST(pcb_t *currProc){
     pcb_t *proc;
     proc = currProc;
@@ -85,17 +72,4 @@ void finalMSG(char msg[], bool Bstatus)
         WAIT();
     }
     printf(char);
-}
-
-/*void Move_Process(pcb_PTR p)
-{
-    removeProcQ(readyQue);
-    insertChild(currentProc, p);
-}*/
-
-void uTLB_RefillHandler() {
-    setENTRYHI(0x80000000);
-    setENTRYLO(0x00000000);
-    TLBWR();
-    Load_State((state_PTR) 0x0FFFF000);
 }
