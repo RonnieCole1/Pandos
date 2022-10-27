@@ -34,9 +34,11 @@ void SYSCALL(SYSNUM)
         case GETSUPPORTPRT:
             void Get_SUPPORT_Data();
     }
-
-     Load_State(p);
-     PANIC();
+    if(SYSNUM > GETSUPPORTPRT) {
+        passUpOrDie(currentProc, GENERALEXCEPT);
+    }
+    myLDST(p);
+    PANIC();
 }
 
 /*SYS1*/
@@ -135,4 +137,30 @@ void BlockedSYS(pcb_t p)
     /****************************************/
 }
 
+void programTRPHNDLR() {
+    passUpOrDie(currentProc, GENERALEXCEPT);
+}
+
+void uTLB_RefillHandler() {
+    passUpOrDie(currentProc, PGFAULTEXCEPT);
+}
+
 /* Passup Or Die */
+
+void passUpOrDie(pcb_PTR currProc, int ExeptInt) {
+    if(currProc->p_supportStruct == NULL) {
+        /*sys2*/
+    }
+    if(currProc->p_supportStruct != NULL) {
+        passUp(currProc, ExeptInt);
+    }
+}
+
+void passUp(pcb_PTR currProc, int ExeptInt) {
+    /*Copy saved exeptState from BIOS Data Page to currProc->p_supportStruct->sup_exceptState[n], where n is the correct except states*/
+    context_t exceptContext;
+    exceptContext.c_stackPtr = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_stackPtr;
+    exceptContext.c_status = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_status;
+    exceptContext.c_pc = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_pc;
+    LDCXT(exceptContext);
+}

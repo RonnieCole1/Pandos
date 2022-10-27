@@ -51,17 +51,17 @@ void scheduler() {
 
     /*Load 5ms on PLT*/
     setTimer(TIMESLICE); /* Time slice is 5ms */
-    LoadState(currentProc) /*Load Processor State*/
+    myLDST(currentProc) /*Load Processor State*/
 }
 
-Load_State(state_PTR currentProccess)
+switch_State(state_PTR currentProccess)
 {
     STCK(intervaltimer);
     setTimer(pseudoClockSema4);
 
 
     currentProc.p_s = currentProccess;
-    LDST(&(currentProc.p_s));
+    myLDST(currentProc);
 }
 
 myLDST(pcb_t *currProc){
@@ -86,11 +86,4 @@ Move_Process(pcb_PTR p)
 {
     removeProcQ(readyQue);
     insertChild(currentProc, p);
-}
-
-void uTLB_RefillHandler() {
-    setENTRYHI(0x80000000);
-    setENTRYLO(0x00000000);
-    TLBWR();
-    Load_State((state_PTR) 0x0FFFF000);
 }
