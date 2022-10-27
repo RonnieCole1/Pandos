@@ -6,6 +6,16 @@
 #include "../h/scheduler.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
+/********************************** Exception Handling ****************************
+ *
+ *   
+ * 
+ *   Authors:
+ *      Ronnie Cole
+ *      Joe Pinkerton
+ *      Joseph Counts
+*/
+
 /* global variables from initial.c */
 extern int processCnt;
 extern int softBlockCnt;
@@ -72,7 +82,7 @@ void Terminate_Process()
 }
 
 /* Sys3 Passeren*/
-pcb_t* wait(sema4)
+pcb_t *wait(sema4)
 {
     sema4--;
     if(sema4 < 0){
@@ -83,7 +93,7 @@ pcb_t* wait(sema4)
 }
 
 /* Sys4 Verhogen */
-pcb_t* signal(sema4)
+pcb_t *signal(sema4)
 {
     sema4++;
     if(sema4 <= 0){
@@ -101,7 +111,7 @@ void Wait_for_IO_Device()
 }
 
 /* Sys6 */
-int Get_CPU_Time(pcb_t p)
+int Get_CPU_Time(pcb_t *p)
 {
     accumulatedTime = currentProc.p_time;
 }
@@ -126,7 +136,7 @@ void Get_SUPPORT_Data()
 }
 
 /*Used for syscalls that block*/
-void BlockedSYS(pcb_t p)
+void BlockedSYS(pcb_t *p)
 {
     /*Refer to 3.5.11 to complete this code */
     p.p_s.s_pc = p.p_s.s_pc + 4;

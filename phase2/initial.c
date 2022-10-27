@@ -4,6 +4,8 @@
 #include "../h/exceptions.h"
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
+#include "../h/initial.h"
+#include "/usr/include/umps3/umps/libumps.h"
 #include "p2test.c"
 
 /************************************ Nucleus Initialization ****************************
@@ -37,7 +39,7 @@ int main(){
     devregarea_t *top;
     top = (devregarea_t *) RAMBASEADDR;
     RAMTOP = top->rambase + top->ramsize;
-    top->intervaltimer = 100;               /* 100 milliseconds */
+    top->intervaltimer = MILLI;               /* 100 milliseconds */
 
     /* Populate the Processor 0 Pass Up Vector */
     passupvector_t *temp;

@@ -17,6 +17,12 @@
 /* define MAXINT */
 #define MAXINT              ((void *)0xFFFFFFFF)
 
+/* define milliseconds */
+#define MILLI               100
+
+/* define CPU burst time */
+#define TIMESLICE 		    5000			
+
 /* define MAXDEVICECNT */
 #define MAXDEVICECNT        49
 

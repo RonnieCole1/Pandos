@@ -4,6 +4,16 @@
 #include "../Phase2/initial.c"
 #include "/usr/include/umps3/umps/libumps.h"
 
+/********************************** Scheduler ****************************
+ *
+ *   
+ * 
+ *   Authors:
+ *      Ronnie Cole
+ *      Joe Pinkerton
+ *      Joseph Counts
+*/
+
 /* global variables maintaining time usage*/
 cpu_t TODStarted;
 cpu_t currentTOD;
@@ -14,64 +24,46 @@ extern int softBlockCnt;
 extern pcb_t *readyQue;
 extern pcb_t *currentProc;
 
-/*We need to implement a clock...*/
-
 void scheduler() {
+    if(currentProc != NULL){
+        STCK(currentTOD);
+        currentProc->p_time = (currentProc->p_time) + (currentTOD - TODStarted);
+    }
 
-    state_t iniState;
-    pcb_PTR p;
+    /* Dispatch the "next" process in the Ready Queue */
+    if(!emptyProcQ(readyQue)){      
+        currentProc = removeProcQ(&readyQue);
+        STCK(TODStarted);           /* Get the start time */
+        setTIMER(TIMESLICE);        /* Load 5ms on PLT */
+        myLDST(currentProc);        /* Load processor state */
+    } else{
+        currentProc = NULL;
 
-    if(emptyProcQ(readyQue))
-    {
-        if(procssCnt == 0)
-        {
+        /* Job well done*/
+        if(procssCnt == 0){
             HALT();
-        }
-        else
-        {
-            if(softBlockCnt != 0)
-            {
-                
-                currentProc = NULL;
-
-                setTimer(DISABLE);
-
-                iniState = ALLOFF | IEPON | IMON | TEBITON;
-                Load_State(iniState);
+        } else{
+            if(softBlockCnt != 0){
+                /* wait */
+                setSTATUS((getSTATUS() | ALLOFF | IEPON | IMON | TEBITON));
                 finalMSG("", FALSE);
-            }
-            else
-            {
+            } else{
+                /* deadlock */
                 finalMSG("", TRUE);
             }
         }
     }
-
-    Move_Process(p);
-
-    /*Load 5ms on PLT*/
-    setTimer(TIMESLICE); /* Time slice is 5ms */
-    myLDST(currentProc) /*Load Processor State*/
 }
-
-switch_State(state_PTR currentProccess)
-{
-    STCK(intervaltimer);
-    setTimer(pseudoClockSema4);
-
-
-    currentProc.p_s = currentProccess;
-    myLDST(currentProc);
-}
-
-myLDST(pcb_t *currProc){
+void myLDST(pcb_t *currProc){
+    pcb_t *proc;
     proc = currProc;
-    LDST(&(currProc->p_s));
+    LDST(&(proc->p_s));
+}
 
 /* Stealing this idea from Mikey. It seemed cool */
-finalMSG(char msg[], bool Bstatus)
+void finalMSG(char msg[], bool Bstatus)
 {
-    if(Bstatus)
+    if(Bstatus == TRUE)
     {
         PANIC();
     }
@@ -80,10 +72,4 @@ finalMSG(char msg[], bool Bstatus)
         WAIT();
     }
     printf(char);
-}
-
-Move_Process(pcb_PTR p)
-{
-    removeProcQ(readyQue);
-    insertChild(currentProc, p);
 }
