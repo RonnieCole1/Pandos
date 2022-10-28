@@ -16,6 +16,10 @@
  *      Joseph Counts
 */
 
+/* global variables from scheduler.c */
+extern cpu_t TODStarted;
+extern cpu_t currentTOD;
+
 /* global variables from initial.c */
 extern int processCnt;
 extern int softBlockCnt;
@@ -28,21 +32,31 @@ void SYSCALL(SYSNUM)
     switch(SYSNUM) 
     {
         case CREATEPROCESS:
-            Create_ProcessP();
+            Create_ProcessP(caller);
+        break;
         case TERMINATEPROCESS:
             Terminate_Process();
+        break;
         case PASSEREN:
             wait(sema4);
+        break;
         case VERHOGEN:
             signal(sema4);
+        break;
         case WAITIO:
             Wait_for_IO_Device();
+        break;
         case GETCPUTIME:
             Get_CPU_Time(p);
+        break;
         case WAITCLOCK:
             Wait_For_Clock();
+        break;
         case GETSUPPORTPRT:
             void Get_SUPPORT_Data();
+        break;
+        default:
+            passUpOrDie(caller);
     }
     if(SYSNUM > GETSUPPORTPRT) {
         passUpOrDie(currentProc, GENERALEXCEPT);
@@ -52,7 +66,7 @@ void SYSCALL(SYSNUM)
 }
 
 /*SYS1*/
-void Create_ProcessP()
+void Create_ProcessP(state_t *caller)
 {
     /*Initialize fields of p*/
     pcb_t *p;
@@ -100,6 +114,7 @@ pcb_t *signal(sema4)
         pcb_PTR temp = removeBlocked(&sema4);
         insertProcQ(&readyQue, temp);
     }
+    return BlockedSYS(temp);
 }
 
 /* Sys5 */
