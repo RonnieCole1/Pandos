@@ -54,7 +54,7 @@ int main(){
     initASL();
 
     /* Initialize all Nucleus maintained variables */
-    procssCnt = softBlockCnt = 0;
+    processCnt = softBlockCnt = 0;
     readyQue = mkEmptyProcQ();
     currentProc = NULL;
 
@@ -92,7 +92,6 @@ void genExceptionHandler(){
     temp = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
     if(temp == INTERRUPTHANDLER){
-        /*Pass along to interput handler (not yet implemented)*/
         interruptHNDLR();
     }
 
@@ -103,6 +102,7 @@ void genExceptionHandler(){
 
     /*SYSCALL*/
     if(temp == SYSCALLEXECPTS){
+        /* This requires a sysnumber, where could that be? */
         SYSCALL();
     }
 

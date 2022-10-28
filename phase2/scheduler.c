@@ -40,7 +40,7 @@ void scheduler() {
         currentProc = NULL;
 
         /* Job well done*/
-        if(procssCnt == 0){
+        if(processCnt == 0){
             HALT();
         } else{
             if(softBlockCnt != 0){
