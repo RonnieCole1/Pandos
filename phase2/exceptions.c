@@ -16,6 +16,10 @@
  *      Joseph Counts
 */
 
+/* global variables from scheduler.c */
+extern cpu_t TODStarted;
+extern cpu_t currentTOD;
+
 /* global variables from initial.c */
 extern int processCnt;
 extern int softBlockCnt;
@@ -28,33 +32,44 @@ void SYSCALL(SYSNUM)
     switch(SYSNUM) 
     {
         case CREATEPROCESS:
-            Create_ProcessP();
+            Create_ProcessP(caller);
+        break;
         case TERMINATEPROCESS:
             Terminate_Process();
+        break;
         case PASSEREN:
             wait(sema4);
+        break;
         case VERHOGEN:
             signal(sema4);
+        break;
         case WAITIO:
             Wait_for_IO_Device();
+        break;
         case GETCPUTIME:
             Get_CPU_Time(p);
+        break;
         case WAITCLOCK:
             Wait_For_Clock();
+        break;
         case GETSUPPORTPRT:
             void Get_SUPPORT_Data();
+        break;
+        default:
+            passUpOrDie(caller);
     }
     if(SYSNUM > GETSUPPORTPRT) {
         passUpOrDie(currentProc, GENERALEXCEPT);
     }
 }
 
-/* System Call 1: When called, a newly populated pcb is placed on the Ready Queue and made a child
-of the Current Process. pcb_t p is the name for this new process, and its fields obtained from registers a1 and a2.
-Its cpu time is initialized to 0, and its semaphore address is set to NULL since it is in the ready
-state. */
-void Create_ProcessP()
-{
+/* 
+    System Call 1: When called, a newly populated pcb is placed on the Ready Queue and made a child
+    of the Current Process. pcb_t p is the name for this new process, and its fields obtained from registers a1 and a2.
+    Its cpu time is initialized to 0, and its semaphore address is set to NULL since it is in the ready
+    state. 
+*/
+void Create_ProcessP(state_t *caller){
     /* Initialize fields of p */
     pcb_t *p;
     p->p_s = s_a1;
@@ -112,6 +127,7 @@ pcb_t *signal(sema4)
         pcb_PTR temp = removeBlocked(&sema4);
         insertProcQ(&readyQue, temp);
     }
+    return BlockedSYS(temp);
 }
 
 /* Sys5 */
