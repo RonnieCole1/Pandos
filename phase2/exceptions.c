@@ -8,7 +8,7 @@
 
 /********************************** Exception Handling ****************************
  *
- *   
+ *   WIP!
  * 
  *   Authors:
  *      Ronnie Cole
@@ -61,41 +61,53 @@ void SYSCALL(SYSNUM)
     if(SYSNUM > GETSUPPORTPRT) {
         passUpOrDie(currentProc, GENERALEXCEPT);
     }
-    myLDST(p);
-    PANIC();
 }
 
-/*SYS1*/
-void Create_ProcessP(state_t *caller)
-{
-    /*Initialize fields of p*/
+/* 
+    System Call 1: When called, a newly populated pcb is placed on the Ready Queue and made a child
+    of the Current Process. pcb_t p is the name for this new process, and its fields obtained from registers a1 and a2.
+    Its cpu time is initialized to 0, and its semaphore address is set to NULL since it is in the ready
+    state. 
+*/
+void Create_ProcessP(state_t *caller){
+    /* Initialize fields of p */
     pcb_t *p;
-    p->p_s = p->p_s.s_a1;
+    p->p_s = s_a1;
     p->p_supportStruct = s_a2;
+    /* Make p a child of currentProc and also place it on the ReadyQueue */
     insertProcQ(readyQue, p);
     insertChild(currentProc, p);
+    processCnt++;
+    /* Set cpu time to 0 and semAdd to NULL */
     p->p_time = 0;
     p->p_semAdd = NULL;
 }
 
-/* Sys2 */
+/* System Call 2: When called, the executing process and all its progeny are terminated. */
 void Terminate_Process()
 {
-    if(emptyChild(currentProc)){
-        /* current process has no children */
-        outChild(currentProc);
-        freePcb(currentProc);
+    pcb_PTR temp = currentProc;
+    /* If currentProc has a child... */
+    if(emptyChild(temp) == FALSE){
+        /* Go to that child... */
+        temp = temp->p_child;
+        /* and then go to its sibling */
+        if(temp->p_sibn != NULL) {
+            temp = temp->p_sibn;
+        }
+        /* Call Terminate Process again until currentProc has no children */
+        Terminate_Process();
+    } else {
+        /* If the CurrentProc has no children, we can remove it */
+        freePcb(temp);
+        temp = NULL;
         --processCnt;
-    } else{
-
+        scheduler();
     }
-
-    /* no current process anymore */
-    currentProc = NULL;
-    scheduler();
 }
 
-/* Sys3 Passeren*/
+/* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
+and then blocked.*/
 pcb_t *wait(sema4)
 {
     sema4--;
@@ -106,7 +118,8 @@ pcb_t *wait(sema4)
     BlockedSYS(p);
 }
 
-/* Sys4 Verhogen */
+/* System Call 3: Preforms a "V" operation or a signal operation. The semaphore is incremented
+and is unblocked/placed into the ReadyQue.*/
 pcb_t *signal(sema4)
 {
     sema4++;
@@ -121,7 +134,7 @@ pcb_t *signal(sema4)
 void Wait_for_IO_Device()
 {
     BlockedSYS(currentProc);
-    SYSCALL(PASSEREN, iosema4, 0, 0);
+    /*SYSCALL(PASSEREN, iosema4, 0, 0); Need Helper Function here*/
     /*Need to handle subdevices*/
 }
 
@@ -136,6 +149,7 @@ void Wait_For_Clock()
 {
     /* Define pseudoClockSema4 */
     pseudoClockSema4--;
+    /* Handle this in a helper function */
     if(pseudoClockSema4 < 0)
     {
         pcb_t *p = removeProcQ(&(pseudoClockSema4));
@@ -153,13 +167,11 @@ void Get_SUPPORT_Data()
 /*Used for syscalls that block*/
 void BlockedSYS(pcb_t *p)
 {
-    /*Refer to 3.5.11 to complete this code */
     p.p_s.s_pc = p.p_s.s_pc + 4;
     p->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
     p->p_time = p->p_time + intervaltimer;
     insertBlocked(currentProc);
     scheduler();
-    /****************************************/
 }
 
 void programTRPHNDLR() {
@@ -172,20 +184,28 @@ void uTLB_RefillHandler() {
 
 /* Passup Or Die */
 
-void passUpOrDie(pcb_PTR currProc, int ExeptInt) {
+void passUpOrDie(pcb_t currProc, int ExeptInt) {
     if(currProc->p_supportStruct == NULL) {
-        /*sys2*/
+        Terminate_Process();
     }
     if(currProc->p_supportStruct != NULL) {
         passUp(currProc, ExeptInt);
     }
 }
 
-void passUp(pcb_PTR currProc, int ExeptInt) {
-    /*Copy saved exeptState from BIOS Data Page to currProc->p_supportStruct->sup_exceptState[n], where n is the correct except states*/
+void passUp(pcb_t currProc, int ExeptInt) {
+    state_PTR tempstate = (state_t *) BIOSDATAPAGE->s_cause & GETEXECCODE;
+    currProc->p_supportStruct->sup_exceptState[ExeptInt] = tempstate;
     context_t exceptContext;
     exceptContext.c_stackPtr = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_stackPtr;
     exceptContext.c_status = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_status;
     exceptContext.c_pc = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_pc;
     LDCXT(exceptContext);
+}
+
+void uTLB_RefillHandler () {
+    setENTRYHI(0x80000000);
+    setENTRYLO(0x00000000);
+    TLBWR();
+    LDST ((state_PTR) 0x0FFFF000);
 }
