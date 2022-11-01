@@ -92,7 +92,7 @@ void genExceptionHandler(){
     temp = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
     if(temp == INTERRUPTHANDLER){
-        interruptHNDLR();
+        interruptHandler();
     }
 
     /*TLB Exceptions*/

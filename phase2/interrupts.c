@@ -5,7 +5,6 @@
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
 #include "../h/initial.h"
-#include "../Phase2/initial.c"
 #include "/usr/include/umps3/umps/libumps.h"
 #include "p2test.c"
 
