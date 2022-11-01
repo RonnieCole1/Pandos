@@ -66,55 +66,56 @@ void interruptHandler(){
 }
 
 void devIntHelper(int tempnum){
-        pcb_PTR temp;
-        unsigned int bitMap;
-        devregarea_t* devReg;
-        devReg= (devregarea_t*) RAMBASEADDR;
-        bitMap = devReg->interrupt_dev[tempnum-DISKINT];
-        int devSem;
-        int devNum;
-        int state;
+    pcb_PTR temp;
+    unsigned int bitMap;
+    devregarea_t* devReg;
+    devReg= (devregarea_t*) RAMBASEADDR;
+    bitMap = devReg->interrupt_dev[tempnum-DISKINT];
+    int devSem;
+    int devNum;
+    int state;
                
-        if((bitMap & 0x1) != 0){
-            devNum = 0;
-        } else if((bitMap & 0x2) != 0){
-            devNum = 1;
-        } else if((bitMap & 0x4) != 0){
-            devNum = 2;
-        } else if((bitMap & 0x8) != 0){
-            devNum = 3;
-        } else if((bitMap & 0x10) != 0){
-            devNum = 4;
-        } else if((bitMap & 0x20) != 0){
-            devNum = 5;
-        } else if((bitMap & 0x40) != 0){
-            devNum = 6;
+    if((bitMap & 0x1) != 0){
+        devNum = 0;
+    } else if((bitMap & 0x2) != 0){
+        devNum = 1;
+    } else if((bitMap & 0x4) != 0){
+        devNum = 2;
+    } else if((bitMap & 0x8) != 0){
+        devNum = 3;
+    } else if((bitMap & 0x10) != 0){
+        devNum = 4;
+    } else if((bitMap & 0x20) != 0){
+        devNum = 5;
+    } else if((bitMap & 0x40) != 0){
+        devNum = 6;
+    } else{
+        devNum = 7;
+    }
+    devSem = (((temp - 0x3)*DEVPERINT)+devNum);
+    if(temp == TERMINT){
+        volatile devregarea_t *devReg = (devregarea_t *) RAMBASEADDR;
+        if((devReg->devreg[devSem].t_transm_status & 0x0F) != READY){
+            state = devReg->devreg[devSem].t_transm_status;
+            devReg->devreg[devSem].t_transm_command = ACK;
         } else{
-            devNum = 7;
+            state = devReg->devreg[devSem].t_recv_status;
+            devReg->devreg[devSem].t_recv_command = ACK;
+            devSem = devSem + DEVPERINT;
         }
-        devSem = (((temp - 0x3)*DEVPERINT)+devNum);
-        if(temp == TERMINT){
-            volatile devregarea_t *devReg = (devregarea_t *) RAMBASEADDR;
-            if((devReg->devreg[devSem].t_transm_status & 0x0F) != READY){
-                state = devReg->devreg[devSem].t_transm_status;
-                devReg->devreg[devSem].t_transm_command = ACK;
-            } else{
-                state = devReg->devreg[devSem].t_recv_status;
-                devReg->devreg[devSem].t_recv_command = ACK;
-                devSem = devSem + DEVPERINT;
-            }
-        } else{ 
-            state=(devReg->devreg[devSem]).d_status;
-            devReg->devreg[devSem].d_command= ACK;
-        }
-        semD[devSem] += 1;
-        if(semD[devSem] <= 0){
-            temp = removeBlocked(&(semD[devSem]));
-            temp->p_s.s_v0 = state;
-            insertProcQ(&readyQue, temp);
-            --softBlockCnt;
-}
-if(currentProc == NULL){
-                scheduler();
-}
+    } else{ 
+        state = (devReg->devreg[devSem]).d_status;
+        devReg->devreg[devSem].d_command= ACK;
+    }
+    semD[devSem] += 1;
+    if(semD[devSem] <= 0){
+        temp = removeBlocked(&(semD[devSem]));
+        temp->p_s.s_v0 = state;
+        insertProcQ(&readyQue, temp);
+        --softBlockCnt;
+    }
+
+    if(currentProc == NULL){
+        scheduler();
+    }
 }
