@@ -27,34 +27,33 @@ extern pcb_t *readyQue;
 extern pcb_t *currentProc;
 extern int deviceSema4s[MAXDEVICECNT];
 
-void SYSCALL(SYSNUM) 
-{
+void SYSCALL() {
     switch(SYSNUM) 
     {
         case CREATEPROCESS:
             Create_ProcessP(caller);
-        break;
+            break;
         case TERMINATEPROCESS:
             Terminate_Process();
-        break;
+            break;
         case PASSEREN:
             wait(sema4);
-        break;
+            break;
         case VERHOGEN:
             signal(sema4);
-        break;
+            break;
         case WAITIO:
             Wait_for_IO_Device();
-        break;
+            break;
         case GETCPUTIME:
             Get_CPU_Time(p);
-        break;
+            break;
         case WAITCLOCK:
             Wait_For_Clock();
-        break;
+            break;
         case GETSUPPORTPRT:
             void Get_SUPPORT_Data();
-        break;
+            break;
         default:
             passUpOrDie(caller);
     }
@@ -84,26 +83,44 @@ void Create_ProcessP(state_t *caller){
 }
 
 /* System Call 2: When called, the executing process and all its progeny are terminated. */
-void Terminate_Process()
-{
-    pcb_PTR temp = currentProc;
-    /* If currentProc has a child... */
-    if(emptyChild(temp) == FALSE){
-        /* Go to that child... */
-        temp = temp->p_child;
-        /* and then go to its sibling */
-        if(temp->p_sibn != NULL) {
-            temp = temp->p_sibn;
-        }
-        /* Call Terminate Process again until currentProc has no children */
-        Terminate_Process();
-    } else {
-        /* If the CurrentProc has no children, we can remove it */
-        freePcb(temp);
-        temp = NULL;
+void Terminate_Process(){
+    if(emptyChild(currentProc)){        /* current process has no child */
+        outChild(currentProc);
+        freePcb(currentProc);
         --processCnt;
-        scheduler();
+    } else {
+        /* recursive call */
+        sys2Help(currentProc);
     }
+    currentProc = NULL;                 /* no current process anymore */
+    scheduler();
+}
+
+/* Recursively removes all the children of head */
+void sys2Help(pcb_PTR head){
+    while(!emptyChild(head)){
+        sys2Help(removeChild(head));
+    }
+
+    if(head->p_semAdd != NULL){
+        int* sem = head->p_semAdd;
+        outBlocked(head);
+        if(sem >= &(deviceSema4s[0]) && sem <= &(deviceSema4s[MAXDEVICECNT - 1])){
+            softBlockCnt--;
+        } else{
+            ++(*sem);                   /* increment semaphore */
+        }
+    } else if(head == currentProc){
+        /* remove process from its parent */
+        outChild(currentProc);
+    } else{
+        /* remove process from readyQue */
+        outProcQ(&readyQue, head);
+    }
+
+    /* free after no more children */
+    freePcb(head);
+    --processCnt;
 }
 
 /* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
