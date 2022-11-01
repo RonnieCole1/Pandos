@@ -135,7 +135,7 @@ pcb_t *wait(sema4)
     BlockedSYS(p);
 }
 
-/* System Call 3: Preforms a "V" operation or a signal operation. The semaphore is incremented
+/* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
 and is unblocked/placed into the ReadyQue.*/
 pcb_t *signal(sema4)
 {

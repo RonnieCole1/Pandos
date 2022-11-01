@@ -81,6 +81,8 @@ int main(){
 
     /* Call the Scheduler */
     scheduler();
+
+    return 0;
 }
 
 /*
