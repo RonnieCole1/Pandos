@@ -122,6 +122,9 @@ void devIntHelper(int tempnum){
     }
 }
 
+/*
+    Copies the processor state pointed to by first to the location pointed to by copy
+*/
 void copyState(state_PTR first, state_PTR copy) {
     int i;
     for (i = 0; i < STATEREGNUM; i++) {
