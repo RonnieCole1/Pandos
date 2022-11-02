@@ -34,7 +34,6 @@ void interruptHandler(){
         while(temp != NULL){
             insertProcQ(&readyQue, temp);
             --softBlockCnt;
-  
             temp = removeBlocked(&semD[48]);
         }
         semD[48] = 0;
@@ -54,13 +53,12 @@ void interruptHandler(){
     }
     if((((state_PTR) BIOSDATAPAGE)->s_cause & TERMINT)!=0){
         devIntHelper(0x7);
-                }
+    }
     if(currentProc != NULL){
         currentProccess->p_time = currentProccess->p_time + (stopped-TODStarted);
-        copyState(&(currentProccess->p_s),((state_PTR) BIOSDATAPAGE));
+        copyState(&(currentProccess->p_s), ((state_PTR) BIOSDATAPAGE));
         readyTimer(currentProc, remaining);
-    }
-    else{
+    } else{
         HALT();
     }
 }
