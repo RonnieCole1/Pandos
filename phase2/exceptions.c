@@ -28,8 +28,17 @@ extern pcb_t *currentProc;
 extern int deviceSema4s[MAXDEVICECNT];
 
 void SYSCALL() {
-    switch(SYSNUM) 
-    {
+    state_t* caller;
+    int request;
+    unsigned int status;
+
+    caller = (state_PTR) /* syscall state */;
+    request = caller->s_reg[3];
+    status = caller->s_status;
+
+    caller->s_pc = caller->s_pc + 4;
+
+    switch(request){
         case CREATEPROCESS:
             Create_ProcessP(caller);
             break;
@@ -55,11 +64,10 @@ void SYSCALL() {
             void Get_SUPPORT_Data();
             break;
         default:
-            passUpOrDie(caller);
+            passUpOrDie(caller, GENERALEXCEPT);
+            break;
     }
-    if(SYSNUM > GETSUPPORTPRT) {
-        passUpOrDie(currentProc, GENERALEXCEPT);
-    }
+    PANIC();
 }
 
 /* 
@@ -125,7 +133,7 @@ void sys2Help(pcb_PTR head){
 
 /* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
 and then blocked.*/
-pcb_t *wait(sema4)
+pcb_t *wait(int sema4)
 {
     sema4--;
     if(sema4 < 0){
@@ -137,7 +145,7 @@ pcb_t *wait(sema4)
 
 /* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
 and is unblocked/placed into the ReadyQue.*/
-pcb_t *signal(sema4)
+pcb_t *signal(int sema4)
 {
     sema4++;
     if(sema4 <= 0){
