@@ -35,7 +35,7 @@ void scheduler() {
         currentProc = removeProcQ(&readyQue);
         STCK(TODStarted);           /* Get the start time */
         setTIMER(TIMESLICE);        /* Load 5ms on PLT */
-        myLDST(currentProc);        /* Load processor state */
+        contSwitch(currentProc);        /* Load processor state */
     } else{
         currentProc = NULL;
 
@@ -46,15 +46,15 @@ void scheduler() {
             if(softBlockCnt != 0){
                 /* wait */
                 setSTATUS((getSTATUS() | ALLOFF | IEPON | IMON | TEBITON));
-                finalMSG("", FALSE);
+                finalMSG("wait", FALSE);
             } else{
                 /* deadlock */
-                finalMSG("", TRUE);
+                finalMSG("deadlock", TRUE);
             }
         }
     }
 }
-void myLDST(pcb_t *currProc){
+void contSwitch(pcb_t *currProc){
     pcb_t *proc;
     proc = currProc;
     LDST(&(proc->p_s));
