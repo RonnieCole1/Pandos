@@ -33,7 +33,7 @@ void SYSCALL() {
     unsigned int status;
 
     caller = (state_PTR) /* syscall state */;
-    request = caller->s_reg[3];
+    request = caller->s_reg[3];     /* s_a0 */
     status = caller->s_status;
 
     caller->s_pc = caller->s_pc + 4;
