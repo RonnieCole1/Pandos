@@ -32,7 +32,7 @@ void SYSCALL() {
     int request;
     unsigned int status;
 
-    caller = (state_PTR) /* syscall state */;
+    caller = (state_PTR) BIOSDATAPAGE;
     request = caller->s_reg[3];     /* s_a0 */
     status = caller->s_status;
 
