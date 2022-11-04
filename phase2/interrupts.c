@@ -27,7 +27,7 @@ void interruptHandler(){
         }
     }
 
-    if((((state_PTR)BIOSDATAPAGE)->s_cause & 2) !=0){
+    if((((state_PTR) BIOSDATAPAGE)->s_cause & 2) !=0){
         pcb_PTR temp;
         LDIT(100000);
         temp = removeBlocked(&semD[48]);
