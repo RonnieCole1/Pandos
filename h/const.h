@@ -99,6 +99,7 @@
 #define BIOSDATAPAGE        0x0FFFF000
 #define	PASSUPVECTOR	    0x0FFFF900
 
+
 /* Exceptions related constants */
 #define	PGFAULTEXCEPT	    0
 #define GENERALEXCEPT	    1
@@ -118,10 +119,20 @@
 #define WAITCLOCK           7
 #define GETSUPPORTPRT       8
 
+/* TLB Refill related constants*/
+
+#define HIGHENTRY           0x80000000
+#define LOWENTRY            0x00000000
+#define TLBSTATE            0x0FFFF000
+
+
 /* operations */
 #define	MIN(A,B)		((A) < (B) ? A : B)
 #define MAX(A,B)		((A) < (B) ? B : A)
 #define	ALIGNED(A)		(((unsigned)A & 0x3) == 0)
+
+/* Psuedo Clock Time*/
+#define PCLOCKTIME 100000;
 
 /* Macro to load the Interval Timer */
 #define LDIT(T)	((* ((cpu_t *) INTERVALTMR)) = (T) * (* ((cpu_t *) TIMESCALEADDR))) 

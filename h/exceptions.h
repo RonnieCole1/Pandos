@@ -14,14 +14,13 @@
 #include "../h/types.h"
 
 extern void SYSCALL();
-extern void Create_ProcessP(state_t* caller);
+extern void Create_ProcessP();
 extern void Terminate_Process();
-extern pcb_t *wait(int sema4);
-extern pcb_t *signal(int sema4);
+extern pcb_t *wait();
+extern pcb_t *signal();
 extern void Wait_for_IO_Device();
-extern int Get_CPU_Time(pcb_t *p);
+extern int Get_CPU_Time();
 extern void Wait_For_Clock();
-extern void BlockedSYS(pcb_t *p);
-extern void sys2Helper(pcb_PTR head);
+extern void BlockedSYS();
 
 #endif

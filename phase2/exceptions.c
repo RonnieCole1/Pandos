@@ -16,6 +16,8 @@
  *      Joseph Counts
 */
 
+int sema4;
+
 /* global variables from scheduler.c */
 extern cpu_t TODStarted;
 extern cpu_t currentTOD;
@@ -27,35 +29,32 @@ extern pcb_t *readyQue;
 extern pcb_t *currentProc;
 extern int deviceSema4s[MAXDEVICECNT];
 
+/* Syscall Handler. We take what is in register a_0 from the BIOSDATAPAGE, which is our sysnumber, and check its value from 1 to 8. If our
+sysNum is greater than 8, we pass up or die.*/
 void SYSCALL() {
-    state_t* caller;
-    int request;
-    unsigned int status;
 
-    caller = (state_PTR) BIOSDATAPAGE;
-    request = caller->s_reg[3];     /* s_a0 */
-    status = caller->s_status;
+    /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
+    int sysNum = ((state_t *) BIOSDATAPAGE)->s_a0;
 
-    caller->s_pc = caller->s_pc + 4;
-
-    switch(request){
+    switch(sysNum) 
+    {
         case CREATEPROCESS:
-            Create_ProcessP(caller);
+            Create_ProcessP();
             break;
         case TERMINATEPROCESS:
             Terminate_Process();
             break;
         case PASSEREN:
-            wait(sema4);
+            wait();
             break;
         case VERHOGEN:
-            signal(sema4);
+            signal();
             break;
         case WAITIO:
             Wait_for_IO_Device();
             break;
         case GETCPUTIME:
-            Get_CPU_Time(p);
+            Get_CPU_Time();
             break;
         case WAITCLOCK:
             Wait_For_Clock();
@@ -64,10 +63,9 @@ void SYSCALL() {
             void Get_SUPPORT_Data();
             break;
         default:
-            passUpOrDie(caller, GENERALEXCEPT);
-            break;
+        /* If we reach here, our sysNum is not between 1-8. We passupordie*/
+            passUpOrDie(currentProc, GENERALEXCEPT);
     }
-    PANIC();
 }
 
 /* 
@@ -133,53 +131,61 @@ void sys2Help(pcb_PTR head){
 
 /* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
 and then blocked.*/
-pcb_t *wait(int sema4)
+pcb_t *wait()
 {
-    sema4--;
-    if(sema4 < 0){
+    sysHelper(FALSE);
+    /*if(sema4 > 0){
         pcb_t *p = removeProcQ(&(sema4));
         insertBlocked(&sema4, currentProc);
-    }
-    BlockedSYS(p);
+    }*/
+    BlockedSYS(currentProc);
 }
 
 /* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
 and is unblocked/placed into the ReadyQue.*/
-pcb_t *signal(int sema4)
+pcb_t *signal()
 {
-    sema4++;
-    if(sema4 <= 0){
+    sysHelper(FALSE);
+    /*if(sema4 <= 0){
         pcb_PTR temp = removeBlocked(&sema4);
         insertProcQ(&readyQue, temp);
-    }
-    return BlockedSYS(temp);
+    }*/
+    BlockedSYS(currentProc);
 }
 
 /* Sys5 */
 void Wait_for_IO_Device()
 {
+    int deviceNumber;
+    int reg1 = currentProc->p_s.s_a1;
+    int reg2 = currentProc->p_s.s_a2;
+    int reg3 = currentProc->p_s.s_a3;
+    deviceNumber = reg2 + (reg1 - DISKINT) * DEVPERINT;
+    if(reg2 == reg3) {
+        deviceNumber += DEVPERINT;
+    }
+    sysHelper(FALSE);
     BlockedSYS(currentProc);
-    /*SYSCALL(PASSEREN, iosema4, 0, 0); Need Helper Function here*/
-    /*Need to handle subdevices*/
+    softBlockCnt++;
 }
 
 /* Sys6 */
 int Get_CPU_Time(pcb_t *p)
 {
+    STCK(currentTOD);
     accumulatedTime = currentProc.p_time;
+    currentTOD = (currentTOD - TODStarted) + accumulatedTime;
+    context_Switch(currentProc);
 }
 
 /* Sys7 */
 void Wait_For_Clock()
 {
-    /* Define pseudoClockSema4 */
-    pseudoClockSema4--;
-    /* Handle this in a helper function */
-    if(pseudoClockSema4 < 0)
-    {
-        pcb_t *p = removeProcQ(&(pseudoClockSema4));
-        insertBlocked(&(pseudoClockSema4),p);
-    }
+    sysHelper(TRUE);
+    /*if(semPClock < 0){
+        pcb_PTR temp = removeBlocked(&sema4);
+        insertProcQ(&readyQue, temp);
+        softBlockCnt++;*/
     BlockedSYS(currentProc);
 }
 
@@ -192,10 +198,13 @@ void Get_SUPPORT_Data()
 /*Used for syscalls that block*/
 void BlockedSYS(pcb_t *p)
 {
-    p.p_s.s_pc = p.p_s.s_pc + 4;
-    p->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
-    p->p_time = p->p_time + intervaltimer;
-    insertBlocked(currentProc);
+    cpu_t stopped;
+    STCK(stopped);
+    currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
+    currentProc->p_time = currentProc->p_time + INTERVALTMR;
+    p = p->p_semAdd;
+    insertBlocked(p, currentProc);
+    currentProc = NULL;
     scheduler();
 }
 
@@ -203,8 +212,15 @@ void programTRPHNDLR() {
     passUpOrDie(currentProc, GENERALEXCEPT);
 }
 
-void uTLB_RefillHandler() {
+void TLB_TrapHandler() {
     passUpOrDie(currentProc, PGFAULTEXCEPT);
+}
+
+void uTLB_RefillHandler () {
+    setENTRYHI(HIGHENTRY);
+    setENTRYLO(LOWENTRY);
+    TLBWR();
+    LDST ((state_t*) TLBSTATE);
 }
 
 /* Passup Or Die */
@@ -221,16 +237,32 @@ void passUpOrDie(pcb_t currProc, int ExeptInt) {
 void passUp(pcb_t currProc, int ExeptInt) {
     state_PTR tempstate = (state_t *) BIOSDATAPAGE->s_cause & GETEXECCODE;
     currProc->p_supportStruct->sup_exceptState[ExeptInt] = tempstate;
-    context_t exceptContext;
-    exceptContext.c_stackPtr = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_stackPtr;
-    exceptContext.c_status = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_status;
-    exceptContext.c_pc = currProc->p_supportStruct->sup_exceptState[ExeptInt].c_pc;
-    LDCXT(exceptContext);
+    LDCXT(currProc->p_supportStruct->sup_exceptState[ExeptInt].c_stackPtr,
+    currProc->p_supportStruct->sup_exceptState[ExeptInt].c_status,
+    currProc->p_supportStruct->sup_exceptState[ExeptInt].c_pc);
 }
 
-void uTLB_RefillHandler () {
-    setENTRYHI(0x80000000);
-    setENTRYLO(0x00000000);
-    TLBWR();
-    LDST ((state_PTR) 0x0FFFF000);
+pcb_PTR sysHelper(bool isClockSema4) {
+    if(isClockSema4 == FALSE) {
+        sema4 = (int) currentProc->p_s.s_a1;
+        sema4++;
+        if(sema4 <= 0) {
+            pcb_PTR temp = removeBlocked(&sema4);
+            insertProcQ(&readyQue, temp);
+        }
+        if(sema4 > 0) {
+            pcb_t *p = removeProcQ(&(sema4));
+            insertBlocked(&sema4, currentProc);
+        }
+    }
+    if(isClockSema4 == FALSE) {
+        int semPClock = deviceSema4s[MAXDEVICECNT-1];
+        semPClock--;
+        if(semPClock < 0) {
+            pcb_PTR temp = removeBlocked(&sema4);
+            insertProcQ(&readyQue, temp);
+            softBlockCnt++;
+        }
+    }
+    context_Switch(currentProc);
 }

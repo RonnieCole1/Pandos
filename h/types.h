@@ -29,6 +29,9 @@ typedef struct {
 #define t_transm_status		d_data0
 #define t_transm_command	d_data1
 
+/*Clock Sema4*/
+#define ClockSema4 deviceSema4s[MAXDEVICECNT-1];
+
 
 /* Bus Register Area */
 typedef struct {
@@ -62,7 +65,7 @@ typedef struct context_t {
 	/* process context fields */
 	unsigned int c_stackPtr,	/* stack pointer value */
 				 c_status,		/* status reg value */
-				 c_pc;			/* PC address */
+				c_pc;			/* PC address */
 } context_t;
 
 typedef struct support_t {
