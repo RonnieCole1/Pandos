@@ -8,6 +8,17 @@
 #include "/usr/include/umps3/umps/libumps.h"
 #include "p2test.c"
 
+/* global variables from scheduler.c */
+extern cpu_t TODStarted;
+extern cpu_t currentTOD;
+
+/* global variables from initial.c */
+extern int processCnt;
+extern int softBlockCnt;
+extern pcb_t *readyQue;
+extern pcb_t *currentProc;
+extern int deviceSema4s[MAXDEVICECNT];
+
 void interruptHandler(){
 
     cpu_t stopped;
@@ -17,8 +28,8 @@ void interruptHandler(){
 
     if ((((state_PTR) BIOSDATAPAGE)->s_cause & PRNTINT) !=0){
         if(currentProc != NULL){
-            currentProccess->p_time = currentProccess->p_time + (stopped-TODStarted);
-            copyState(&(currentProccess->p_s),((state_PTR) BIOSDATAPAGE));
+            currentProc->p_time = currentProc->p_time + (stopped-TODStarted);
+            copyState(&(currentProc->p_s),((state_PTR) BIOSDATAPAGE));
             insertProcQ(&readyQue, currentProc);
             scheduler();
         }
@@ -27,38 +38,40 @@ void interruptHandler(){
         }
     }
 
-    if((((state_PTR) BIOSDATAPAGE)->s_cause & 2) !=0){
+    if((((state_PTR)BIOSDATAPAGE)->s_cause & 2) !=0){
         pcb_PTR temp;
-        LDIT(100000);
-        temp = removeBlocked(&semD[48]);
+        LDIT(PCLOCKTIME);
+        temp = removeBlocked(&deviceSema4s[MAXDEVICECNT-1]);
         while(temp != NULL){
             insertProcQ(&readyQue, temp);
             --softBlockCnt;
-            temp = removeBlocked(&semD[48]);
+  
+            temp = removeBlocked(&deviceSema4s[MAXDEVICECNT-1]);
         }
-        semD[48] = 0;
+        deviceSema4s[MAXDEVICECNT-1] = 0;
         if(currentProc == NULL){
             scheduler();
         }
     }
     
-    if((((state_PTR) BIOSDATAPAGE)->s_cause & DISKINT)!=0){
+    if((((state_PTR)BIOSDATAPAGE)->s_cause & DISKINT)!=0){
         devIntHelper(0x3);
     }
-    if((((state_PTR) BIOSDATAPAGE)->s_cause & FLASHINT)!=0){
+    if((((state_PTR)BIOSDATAPAGE)->s_cause & FLASHINT)!=0){
         devIntHelper(0x4);
     }
-    if((((state_PTR) BIOSDATAPAGE)->s_cause & PRNTINT)!=0){     
+    if((((state_PTR)BIOSDATAPAGE)->s_cause & PRNTINT)!=0){     
         devIntHelper(0x6);
     }
-    if((((state_PTR) BIOSDATAPAGE)->s_cause & TERMINT)!=0){
+    if((((state_PTR)BIOSDATAPAGE)->s_cause & TERMINT)!=0){
         devIntHelper(0x7);
-    }
+                }
     if(currentProc != NULL){
-        currentProccess->p_time = currentProccess->p_time + (stopped-TODStarted);
-        copyState(&(currentProccess->p_s), ((state_PTR) BIOSDATAPAGE));
-        readyTimer(currentProc, remaining);
-    } else{
+        currentProc->p_time = currentProc->p_time + (stopped-TODStarted);
+        copyState(&(currentProc->p_s),((state_PTR) BIOSDATAPAGE));
+        Ready_Timer(currentProc, remaining);
+    }
+    else{
         HALT();
     }
 }
@@ -90,9 +103,7 @@ void devIntHelper(int tempnum){
     } else{
         devNum = 7;
     }
-
-    devSem = (((temp - 0x3)*DEVPERINT)+devNum);
-
+    devSem = (((tempnum - 0x3)*DEVPERINT)+devNum);
     if(temp == TERMINT){
         volatile devregarea_t *devReg = (devregarea_t *) RAMBASEADDR;
         if((devReg->devreg[devSem].t_transm_status & 0x0F) != READY){
@@ -107,11 +118,9 @@ void devIntHelper(int tempnum){
         state = (devReg->devreg[devSem]).d_status;
         devReg->devreg[devSem].d_command= ACK;
     }
-
-    semD[devSem] += 1;
-
-    if(semD[devSem] <= 0){
-        temp = removeBlocked(&(semD[devSem]));
+    deviceSema4s[devSem] += 1;
+    if(deviceSema4s[devSem] <= 0){
+        temp = removeBlocked(&(deviceSema4s[devSem]));
         temp->p_s.s_v0 = state;
         insertProcQ(&readyQue, temp);
         --softBlockCnt;
@@ -121,23 +130,14 @@ void devIntHelper(int tempnum){
         scheduler();
     }
 }
-
-/*
-    Copies the processor state pointed to by first to the location pointed to by copy
-*/
 void copyState(state_PTR first, state_PTR copy) {
     int i;
-    for (i = 0; i < STATEREGNUM; i++) {
-        copy->s_reg[i] = first->s_reg[i];
-    }
+        for (i = 0; i < STATEREGNUM; i++) {
+            copy->s_reg[i] = first->s_reg[i];
+        }
     copy->s_entryHI = first->s_entryHI;
     copy->s_cause = first->s_cause;
     copy->s_status = first->s_status;
-    copy->s_pc = first->s_pc;        
-}
-
-void readyTimer(pcb_PTR cp, cpu_t time){
-    STCK(TODStarted);                                                                                                                      
-    setTIMER(time);                                                                                                
-    contSwitch(cp);                                
+    copy->s_pc = first->s_pc;
+               
 }

@@ -4,9 +4,7 @@
 #include "../h/exceptions.h"
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
-#include "../h/initial.h"
 #include "/usr/include/umps3/umps/libumps.h"
-#include "p2test.c"
 
 /************************************ Nucleus Initialization ****************************
  *
@@ -34,55 +32,62 @@ int deviceSema4s[MAXDEVICECNT];
     Programs entry point performing the Nucleus initialization
 */
 int main(){
-    /* Load system-wide interval timer */
-    int RAMTOP;
+
+    /* Define RAMTOP, and have it refer to the last frame */
+    memaddr RAMTOP;
+    RAMTOP = RAMBASESIZE + RAMBASEADDR;
+
+    /* set interval timer to 100 milliseconds */
     devregarea_t *top;
     top = (devregarea_t *) RAMBASEADDR;
-    RAMTOP = top->rambase + top->ramsize;
-    top->intervaltimer = MILLI;               /* 100 milliseconds */
+    top->intervaltimer = 100;
 
     /* Populate the Processor 0 Pass Up Vector */
-    passupvector_t *temp;
-    temp = (passupvector_t *) PASSUPVECTOR;
-    temp->tlb_refill_handler = (memaddr) uTLB_RefillHandler();
-    temp->tlb_refill_stackPtr = KERNELSTACK;
-    temp->exception_handler = (memaddr) genExceptionHandler();
-    temp->exception_stackPtr = KERNELSTACK;
+    passupvector_t *pvector;
+    pvector = (passupvector_t *) PASSUPVECTOR;
+    /*pvector->tlb_refll_handler = (memaddr) uTLB_RefillHandler();*/
+    pvector->tlb_refll_stackPtr = KERNALSTACK;
+    pvector->execption_handler = (memaddr) genExceptionHandler();
+    pvector->exception_stackPtr = KERNALSTACK;
 
     /* Initialize PCB and ASL data structures */
     initPcbs();
     initASL();
 
     /* Initialize all Nucleus maintained variables */
-    processCnt = softBlockCnt = 0;
+    processCnt = 0;
+    softBlockCnt = 0;
     readyQue = mkEmptyProcQ();
     currentProc = NULL;
 
+    /* Initialize the semaphores. There are 49 semaphores, including our clock. */
     int i;
-    for(i = 0; i < [MAXDEVICECNT + ]; i++){
+    for(i = 0; i < MAXDEVICECNT; i++){
+        /* These semaphores start as synchronization semaphores, including our clock semaphore @49*/
         deviceSema4s[i] = 0;
     }
 
     /* Instantiate a single process */
     currentProc = allocPcb();
+    /* If our current proc is not Null, then initalize all of currentProc's fields*/
     if(currentProc != NULL){
-        currentProc->p_s.s_sp = RAMTOP;
+        /*Set currentProc's state's stack pointer to our interval timer*/
+        currentProc->p_s.s_sp = (memaddr) RAMTOP;
         currentProc->p_s.s_pc = (memaddr) test; /* test function in p2test */
         currentProc->p_s.s_t9 = (memaddr) test;
         currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
+        currentProc->p_supportStruct = NULL;
+
+        /*Insert CurrentProc into our readyQue*/
         insertProcQ(&readyQue, currentProc);
         processCnt += 1;
-        currentProc = NULL;
+        /*currentProc = NULL; not sure we need this but maybe we do*/     
+        /* Call the Scheduler */
+        scheduler();
     } else{
         PANIC();
     }
-
-    LDIT(INTERVALTMR);
-
-    /* Call the Scheduler */
-    scheduler();
-
-    return 0;
+    LDIT(PCLOCKTIME);
 }
 
 /*
@@ -90,22 +95,22 @@ int main(){
 */
 void genExceptionHandler(){
     state_PTR oldState = (state_t *) BIOSDATAPAGE;
-    int temp;
-    temp = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
+    int exeCause;
+    exeCause = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
-    if(temp == INTERRUPTHANDLER){
-        interruptHandler();
+    if(exeCause == INTERRUPTHANDLER){
+        /*Pass along to interput handler (not yet implemented)*/
+        interruptHNDLR();
     }
 
     /*TLB Exceptions*/
-    if(temp <= TLBEXCEPTS){
-        uTLB_RefillHandler();
+    if(exeCause <= TLBEXCEPTS){
+        TLB_TrapHandler();
     }
 
     /*SYSCALL*/
-    if(temp == SYSCALLEXECPTS){
-        /* This requires a sysnumber, where could that be? */
-        SYSCALL();
+    if(exeCause == SYSCALLEXECPTS){
+        systemCall();
     }
 
     programTRPHNDLR();

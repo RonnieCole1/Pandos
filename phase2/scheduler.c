@@ -1,7 +1,9 @@
 #include "../h/pcb.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../Phase2/initial.c"
+#include "../h/exceptions.h"
+#include "../h/interrupts.h"
+#include "../h/initial.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 /********************************** Scheduler ****************************
@@ -35,7 +37,6 @@ void scheduler() {
         currentProc = removeProcQ(&readyQue);
         STCK(TODStarted);           /* Get the start time */
         setTIMER(TIMESLICE);        /* Load 5ms on PLT */
-        contSwitch(currentProc);        /* Load processor state */
     } else{
         currentProc = NULL;
 
@@ -46,30 +47,16 @@ void scheduler() {
             if(softBlockCnt != 0){
                 /* wait */
                 setSTATUS((getSTATUS() | ALLOFF | IEPON | IMON | TEBITON));
-                finalMSG("wait", FALSE);
+                WAIT();
             } else{
                 /* deadlock */
-                finalMSG("deadlock", TRUE);
+                PANIC();
             }
         }
     }
 }
-void contSwitch(pcb_t *currProc){
+void context_Switch(pcb_t *currProc){
     pcb_t *proc;
     proc = currProc;
     LDST(&(proc->p_s));
-}
-
-/* Stealing this idea from Mikey. It seemed cool */
-void finalMSG(char msg[], bool Bstatus)
-{
-    if(Bstatus == TRUE)
-    {
-        PANIC();
-    }
-    if(Bstatus == FALSE)
-    {
-        WAIT();
-    }
-    printf(char);
 }
