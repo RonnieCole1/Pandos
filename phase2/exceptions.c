@@ -64,7 +64,7 @@ void systemCall() {
             break;
         default:
         /* If we reach here, our sysNum is not between 1-8. We passupordie*/
-            passUpOrDie(currentProc, GENERALEXCEPT);
+            passUpOrDie(GENERALEXCEPT);
     }
 }
 
@@ -76,9 +76,10 @@ void systemCall() {
 */
 void Create_ProcessP(state_t *caller){
     /* Initialize fields of p */
-    pcb_t *p;
-    p->p_s = s_a1;
-    p->p_supportStruct = s_a2;
+    pcb_t *p = allocPcb();
+    /*p->p_s = s_a1;*/
+    p->p_supportStruct = p->p_s.s_a2;
+    p->p_s.s_v0 = 0;
     /* Make p a child of currentProc and also place it on the ReadyQueue */
     insertProcQ(readyQue, p);
     insertChild(currentProc, p);
@@ -131,7 +132,7 @@ void sys2Help(pcb_PTR head){
 
 /* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
 and then blocked.*/
-void *wait()
+void wait()
 {
     sysHelper(1);
     /*if(sema4 > 0){
@@ -142,7 +143,7 @@ void *wait()
 
 /* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
 and is unblocked/placed into the ReadyQue.*/
-void *signal()
+void signal()
 {
     sysHelper(2);
     /*if(sema4 <= 0){
@@ -205,11 +206,11 @@ void BlockedSYS(pcb_t *p)
 }
 
 void programTRPHNDLR() {
-    passUpOrDie(currentProc, GENERALEXCEPT);
+    passUpOrDie(GENERALEXCEPT);
 }
 
 void TLB_TrapHandler() {
-    passUpOrDie(currentProc, PGFAULTEXCEPT);
+    passUpOrDie(PGFAULTEXCEPT);
 }
 
 /* Passup Or Die */
@@ -219,19 +220,19 @@ void passUpOrDie(pcb_t currProc, int ExeptInt) {
         Terminate_Process();
     }
     if(currProc.p_supportStruct != NULL) {
-        passUp(currProc, ExeptInt);
+        passUp(ExeptInt);
     }
 }
 
-void passUp(pcb_t currProc, int ExeptInt) {
-    state_PTR tempstate = (state_t *) BIOSDATAPAGE.s_cause & GETEXECCODE;
-    currProc.p_supportStruct->sup_exceptState[ExeptInt] = tempstate;
-    LDCXT(currProc.p_supportStruct->sup_exceptState[ExeptInt].c_stackPtr,
-    currProc.p_supportStruct->sup_exceptState[ExeptInt].c_status,
-    currProc.p_supportStruct->sup_exceptState[ExeptInt].c_pc);
+void passUp(int ExeptInt) {
+    state_PTR tempstate = ((state_t *) BIOSDATAPAGE)->s_cause & GETEXECCODE;
+    currentProc->p_supportStruct->sup_exceptState[ExeptInt] = *tempstate;
+    LDCXT(currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_stackPtr,
+    currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_status,
+    currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_pc);
 }
 
-pcb_PTR sysHelper(int optType) {
+void sysHelper(int optType) {
 	switch (optType)
 	{
 		case 0: /* P Operation */
@@ -249,7 +250,7 @@ pcb_PTR sysHelper(int optType) {
         		    	pcb_t *p = removeProcQ(&(sema4));
             			insertProcQ(&sema4, currentProc);
         		}
-    		case 2: 
+    		case 2: ;
         		int semPClock; 
         		semPClock = deviceSema4s[MAXDEVICECNT-1];
         		semPClock--;
