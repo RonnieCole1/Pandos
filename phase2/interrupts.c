@@ -8,17 +8,24 @@
 #include "/usr/include/umps3/umps/libumps.h"
 #include "p2test.c"
 
-void interruptHandler(){
+/* global variables from initial.c */
+extern int softBlockCnt;
+extern pcb_t *readyQue;
+extern pcb_t *currentProc;
+extern int deviceSema4s[MAXDEVICECNT];
 
-    cpu_t stopped;
-    cpu_t remaining;
-    STCK(stopped);
-    remaining = getTIMER(); 
+/* global variables from scheduler.c */
+extern cpu_t TODStarted;
+extern cpu_t currentTOD;
+
+void interruptHandler(){
+    STCK(currentTOD);
+    TODStarted = getTIMER(); 
 
     if ((((state_PTR) BIOSDATAPAGE)->s_cause & PRNTINT) !=0){
         if(currentProc != NULL){
-            currentProccess->p_time = currentProccess->p_time + (stopped-TODStarted);
-            copyState(&(currentProccess->p_s),((state_PTR) BIOSDATAPAGE));
+            currentProc->p_time = currentProc->p_time + (currentTOD - TODStarted);
+            copyState(&(currentProc->p_s),((state_PTR) BIOSDATAPAGE));
             insertProcQ(&readyQue, currentProc);
             scheduler();
         }
@@ -30,13 +37,13 @@ void interruptHandler(){
     if((((state_PTR) BIOSDATAPAGE)->s_cause & 2) !=0){
         pcb_PTR temp;
         LDIT(100000);
-        temp = removeBlocked(&semD[48]);
+        temp = removeBlocked(&deviceSema4s[48]);
         while(temp != NULL){
             insertProcQ(&readyQue, temp);
             --softBlockCnt;
-            temp = removeBlocked(&semD[48]);
+            temp = removeBlocked(&deviceSema4s[48]);
         }
-        semD[48] = 0;
+        deviceSema4s[48] = 0;
         if(currentProc == NULL){
             scheduler();
         }
@@ -55,9 +62,9 @@ void interruptHandler(){
         devIntHelper(0x7);
     }
     if(currentProc != NULL){
-        currentProccess->p_time = currentProccess->p_time + (stopped-TODStarted);
-        copyState(&(currentProccess->p_s), ((state_PTR) BIOSDATAPAGE));
-        readyTimer(currentProc, remaining);
+        currentProc->p_time = currentProc->p_time + (currentTOD - TODStarted);
+        copyState(&(currentProc->p_s), ((state_PTR) BIOSDATAPAGE));
+        readyTimer(currentProc, TODStarted);
     } else{
         HALT();
     }
@@ -108,10 +115,10 @@ void devIntHelper(int tempnum){
         devReg->devreg[devSem].d_command= ACK;
     }
 
-    semD[devSem] += 1;
+    deviceSema4s[devSem] += 1;
 
-    if(semD[devSem] <= 0){
-        temp = removeBlocked(&(semD[devSem]));
+    if(deviceSema4s[devSem] <= 0){
+        temp = removeBlocked(&(deviceSema4s[devSem]));
         temp->p_s.s_v0 = state;
         insertProcQ(&readyQue, temp);
         --softBlockCnt;

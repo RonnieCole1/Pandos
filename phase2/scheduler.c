@@ -1,7 +1,7 @@
 #include "../h/pcb.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../Phase2/initial.c"
+#include "../h/initial.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 /********************************** Scheduler ****************************
@@ -35,7 +35,7 @@ void scheduler() {
         currentProc = removeProcQ(&readyQue);
         STCK(TODStarted);           /* Get the start time */
         setTIMER(TIMESLICE);        /* Load 5ms on PLT */
-        contSwitch(currentProc);        /* Load processor state */
+        contSwitch(currentProc);    /* Load processor state */
     } else{
         currentProc = NULL;
 
@@ -61,15 +61,14 @@ void contSwitch(pcb_t *currProc){
 }
 
 /* Stealing this idea from Mikey. It seemed cool */
-void finalMSG(char msg[], bool Bstatus)
+void finalMSG(char msg[], int Bstatus)
 {
-    if(Bstatus == TRUE)
-    {
+    if(Bstatus == TRUE){
+        printf(msg);
         PANIC();
     }
-    if(Bstatus == FALSE)
-    {
+    if(Bstatus == FALSE){
+        printf(msg);
         WAIT();
     }
-    printf(char);
 }

@@ -104,7 +104,6 @@ void genExceptionHandler(){
 
     /*SYSCALL*/
     if(temp == SYSCALLEXECPTS){
-        /* This requires a sysnumber, where could that be? */
         SYSCALL();
     }
 

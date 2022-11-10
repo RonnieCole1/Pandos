@@ -79,8 +79,8 @@ void SYSCALL() {
 void Create_ProcessP(state_t *caller){
     /* Initialize fields of p */
     pcb_t *p;
-    p->p_s = s_a1;
-    p->p_supportStruct = s_a2;
+    p->p_s = caller->s_reg[4];                  /* s_a1 */
+    p->p_supportStruct = caller->s_reg[5];         /* s_a2 */
     /* Make p a child of currentProc and also place it on the ReadyQueue */
     insertProcQ(readyQue, p);
     insertChild(currentProc, p);
@@ -133,8 +133,7 @@ void sys2Help(pcb_PTR head){
 
 /* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
 and then blocked.*/
-pcb_t *wait(int sema4)
-{
+pcb_t *wait(int sema4){
     sema4--;
     if(sema4 < 0){
         pcb_t *p = removeProcQ(&(sema4));
@@ -145,14 +144,13 @@ pcb_t *wait(int sema4)
 
 /* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
 and is unblocked/placed into the ReadyQue.*/
-pcb_t *signal(int sema4)
-{
+pcb_t *signal(int sema4){
     sema4++;
     if(sema4 <= 0){
-        pcb_PTR temp = removeBlocked(&sema4);
+        pcb_t *temp = removeBlocked(&sema4);
         insertProcQ(&readyQue, temp);
     }
-    return BlockedSYS(temp);
+    BlockedSYS(temp);
 }
 
 /* Sys5 */
@@ -166,7 +164,7 @@ void Wait_for_IO_Device()
 /* Sys6 */
 int Get_CPU_Time(pcb_t *p)
 {
-    accumulatedTime = currentProc.p_time;
+    accumulatedTime = currentProc->p_time;
 }
 
 /* Sys7 */
@@ -189,10 +187,10 @@ void Get_SUPPORT_Data()
     return currentProc->p_supportStruct;
 }
 
-/*Used for syscalls that block*/
+/* Used for syscalls that block */
 void BlockedSYS(pcb_t *p)
 {
-    p.p_s.s_pc = p.p_s.s_pc + 4;
+    p->p_s.s_pc = p->p_s.s_pc + 4;
     p->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
     p->p_time = p->p_time + intervaltimer;
     insertBlocked(currentProc);
@@ -204,12 +202,13 @@ void programTRPHNDLR() {
 }
 
 void uTLB_RefillHandler() {
-    passUpOrDie(currentProc, PGFAULTEXCEPT);
+    state_PTR caller = (state_PTR) PGFAULTEXCEPT;
+    passUpOrDie(caller, PGFAULTEXCEPT);
 }
 
 /* Passup Or Die */
 
-void passUpOrDie(pcb_t currProc, int ExeptInt) {
+void passUpOrDie(state_PTR currProc, int ExeptInt) {
     if(currProc->p_supportStruct == NULL) {
         Terminate_Process();
     }
