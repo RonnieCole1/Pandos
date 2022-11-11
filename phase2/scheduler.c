@@ -1,6 +1,8 @@
 #include "../h/pcb.h"
 #include "../h/types.h"
 #include "../h/const.h"
+#include "../h/exceptions.h"
+#include "../h/interrupts.h"
 #include "../h/initial.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
@@ -46,29 +48,16 @@ void scheduler() {
             if(softBlockCnt != 0){
                 /* wait */
                 setSTATUS((getSTATUS() | ALLOFF | IEPON | IMON | TEBITON));
-                finalMSG("wait", FALSE);
+                WAIT();
             } else{
                 /* deadlock */
-                finalMSG("deadlock", TRUE);
+                PANIC();
             }
         }
     }
 }
-void contSwitch(pcb_t *currProc){
+void context_Switch(pcb_t *currProc){
     pcb_t *proc;
     proc = currProc;
     LDST(&(proc->p_s));
-}
-
-/* Stealing this idea from Mikey. It seemed cool */
-void finalMSG(char msg[], int Bstatus)
-{
-    if(Bstatus == TRUE){
-        printf(msg);
-        PANIC();
-    }
-    if(Bstatus == FALSE){
-        printf(msg);
-        WAIT();
-    }
 }

@@ -11,8 +11,6 @@
 
 typedef signed int cpu_t;
 
-typedef signed double accumulatedTime;
-
 typedef unsigned int memaddr;
 
 
@@ -28,6 +26,9 @@ typedef struct {
 #define t_recv_command		d_command
 #define t_transm_status		d_data0
 #define t_transm_command	d_data1
+
+/*Clock Sema4*/
+#define ClockSema4 deviceSema4s[MAXDEVICECNT-1];
 
 
 /* Bus Register Area */
@@ -62,14 +63,8 @@ typedef struct context_t {
 	/* process context fields */
 	unsigned int c_stackPtr,	/* stack pointer value */
 				 c_status,		/* status reg value */
-				 c_pc;			/* PC address */
+				c_pc;			/* PC address */
 } context_t;
-
-typedef struct support_t {
-	int			sup_asid;					 /* Process Id (asid) */
-	state_t		sup_exceptState[2];			 /* stored excpt states */
-	context_t	sup_exceptContext{2};		 /* pass up contexts */
-} support_t;
 
 #define STATEREGNUM	31
 typedef struct state_t {
@@ -78,8 +73,13 @@ typedef struct state_t {
 	unsigned int	s_status;
 	unsigned int 	s_pc;
 	int	 			s_reg[STATEREGNUM];
-
 } state_t, *state_PTR;
+
+typedef struct support_t {
+	int			sup_asid;					 /* Process Id (asid) */
+	state_t		sup_exceptState[2];			 /* stored excpt states */
+	context_t	sup_exceptContext[2];		 /* pass up contexts */
+} support_t;
 
 /* process control block type */
 typedef struct pcb_t{
