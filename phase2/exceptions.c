@@ -35,7 +35,6 @@ void systemCall() {
 
     state_t* caller;
     int request;
-    unsigned int status;
 
     /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
     caller = (state_PTR) BIOSDATAPAGE;

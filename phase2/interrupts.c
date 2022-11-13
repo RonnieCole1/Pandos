@@ -126,6 +126,7 @@ void devIntHelper(int tempnum){
         scheduler();
     }
 }
+
 void copyState(state_PTR first, state_PTR copy) {
     int i;
         for (i = 0; i < STATEREGNUM; i++) {
