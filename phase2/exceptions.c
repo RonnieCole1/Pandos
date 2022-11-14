@@ -16,7 +16,7 @@
  *      Joseph Counts
 */
 
-int sema4;
+int* sema4;
 
 /* global variables from scheduler.c */
 extern cpu_t TODStarted;
@@ -33,39 +33,49 @@ extern int deviceSema4s[MAXDEVICECNT];
 sysNum is greater than 8, we pass up or die.*/
 void systemCall() {
 
-    /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
-    int sysNum = ((state_t *) BIOSDATAPAGE)->s_a0;
+    state_t* caller;
+    int request;
 
-    switch(sysNum) 
+    /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
+    caller = (state_PTR) BIOSDATAPAGE;
+    request = caller->s_a0;
+
+    caller->s_pc = caller->s_pc + 4;
+
+    /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
+    //int sysNum = ((state_t *) BIOSDATAPAGE)->s_a0;
+
+    switch(request) 
     {
         case CREATEPROCESS:
-            Create_ProcessP();
+            Create_ProcessP(caller);
             break;
         case TERMINATEPROCESS:
             Terminate_Process();
             break;
         case PASSEREN:
-            wait();
+            wait(caller);
             break;
         case VERHOGEN:
-            signal();
+            signal(caller);
             break;
         case WAITIO:
-            Wait_for_IO_Device();
+            Wait_for_IO_Device(caller);
             break;
         case GETCPUTIME:
-            Get_CPU_Time();
+            Get_CPU_Time(caller);
             break;
         case WAITCLOCK:
-            Wait_For_Clock();
+            Wait_For_Clock(caller);
             break;
         case GETSUPPORTPRT:
             Get_SUPPORT_Data();
             break;
         default:
         /* If we reach here, our sysNum is not between 1-8. We passupordie*/
-            passUpOrDie(GENERALEXCEPT);
+            passUpOrDie(caller, GENERALEXCEPT);
     }
+    PANIC();
 }
 
 /* 
@@ -76,20 +86,38 @@ void systemCall() {
 */
 void Create_ProcessP(state_t *caller){
     /* Initialize fields of p */
-    pcb_t *p = allocPcb();
-    /*p->p_s = s_a1;*/
-    p->p_supportStruct = p->p_s.s_a2;
-    p->p_s.s_v0 = 0;
-    /* Make p a child of currentProc and also place it on the ReadyQueue */
-    insertProcQ(readyQue, p);
-    insertChild(currentProc, p);
+    pcb_PTR p = allocPcb();
+    if(p == NULL){
+        caller->s_v0 = FAILURE;
+        context_Switch(caller);         /*return CPU to caller */
+    }
     processCnt++;
+
+    /* Make p a child of currentProc and also place it on the ReadyQueue */
+    insertChild(currentProc, p);
+    insertProcQ(&readyQue, p);
+
+    /* copy CPU state to new process */
+    copyState((state_PTR) caller->s_a1, &(p->p_s));
+
     /* Set cpu time to 0 and semAdd to NULL */
     p->p_time = 0;
     p->p_semAdd = NULL;
+
+    /* set return value */
+    caller->s_v0 = SUCCESS;
+
+    /* return CPU to caller */
+    context_Switch(caller);
+
+    /*p->p_s = s_a1;*/
+    /*p->p_supportStruct = p->p_s.s_a2;
+    p->p_s.s_v0 = 0;*/
 }
 
-/* System Call 2: When called, the executing process and all its progeny are terminated. */
+/* 
+    System Call 2: When called, the executing process and all its progeny are terminated. 
+*/
 void Terminate_Process(){
     if(emptyChild(currentProc)){        /* current process has no child */
         outChild(currentProc);
@@ -132,29 +160,35 @@ void sys2Help(pcb_PTR head){
 
 /* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
 and then blocked.*/
-void wait()
+void wait(state_PTR caller)
 {
-    sysHelper(1);
-    /*if(sema4 > 0){
-        pcb_t *p = removeProcQ(&(sema4));
-        insertBlocked(&sema4, currentProc);
-    }*/
+    //sysHelper(1);
+    sema4 = (int*) caller->s_a1;
+    sema4++;
+    if(sema4 < 0) {
+        pcb_PTR temp = removeBlocked(&sema4);
+        insertProcQ(&readyQue, temp);
+        BlockedSYS(currentProc);
+    }
+    context_Switch(caller);
 }
 
 /* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
 and is unblocked/placed into the ReadyQue.*/
-void signal()
+void signal(state_PTR caller)
 {
-    sysHelper(2);
-    /*if(sema4 <= 0){
-        pcb_PTR temp = removeBlocked(&sema4);
-        insertProcQ(&readyQue, temp);
-    }*/
+    //sysHelper(2);
+    sema4 = (int*) caller->s_a1;
+    sema4++;
+    if(sema4 <= 0) {
+        pcb_t *p = removeProcQ(&(sema4));
+        insertProcQ(&sema4, currentProc);
+    }
+    context_Switch(caller);
 }
 
 /* Sys5 */
-void Wait_for_IO_Device()
-{
+void Wait_for_IO_Device(state_PTR caller){
     int deviceNumber;
     int reg1 = currentProc->p_s.s_a1;
     int reg2 = currentProc->p_s.s_a2;
@@ -168,22 +202,33 @@ void Wait_for_IO_Device()
 }
 
 /* Sys6 */
-int Get_CPU_Time(pcb_t *p)
-{
-    STCK(currentTOD);
-    double accumulatedTime = currentProc->p_time;
-    currentTOD = (currentTOD - TODStarted) + accumulatedTime;
-    context_Switch(currentProc);
+int Get_CPU_Time(state_PTR caller){
+    cpu_t temp;
+
+    /* get current time, subtract from global start time */
+    STCK(temp);
+    currentProc->p_time = (currentProc->p_time) + (temp - TODStarted);
+    caller->s_v0 = currentProc->p_time;
+
+    /*update start time */
+    STCK(TODStarted);
+    context_Switch(caller);
+
+    /*double accumulatedTime = currentProc->p_time;
+    currentTOD = (currentTOD - TODStarted) + accumulatedTime;*/
+    
 }
 
 /* Sys7 */
-void Wait_For_Clock()
+void Wait_For_Clock(state_PTR caller)
 {
-    sysHelper(3);
-    /*if(semPClock < 0){
-        pcb_PTR temp = removeBlocked(&sema4);
-        insertProcQ(&readyQue, temp);
-        softBlockCnt++;*/
+    //sysHelper(3);
+    int semPClock = (int*) &(deviceSema4s[MAXDEVICECNT-1]);
+    semPClock--;
+    insertBlocked(semPClock, currentProc);
+    copyState(caller, &(currentProc->p_s));     /* store state back in currentProc */
+    softBlockCnt++;
+    scheduler();
 }
 
 /* Sys8 */
@@ -192,7 +237,7 @@ void Get_SUPPORT_Data()
     return currentProc->p_supportStruct;
 }
 
-/*Used for syscalls that block*/
+/* Used for syscalls that block */
 void BlockedSYS(pcb_t *p)
 {
     cpu_t stopped;
@@ -206,20 +251,21 @@ void BlockedSYS(pcb_t *p)
 }
 
 void programTRPHNDLR() {
-    passUpOrDie(GENERALEXCEPT);
+    state_PTR caller = (state_PTR) BIOSDATAPAGE;
+    passUpOrDie(caller, GENERALEXCEPT);
 }
 
 void TLB_TrapHandler() {
-    passUpOrDie(PGFAULTEXCEPT);
+    state_PTR caller = (state_PTR) BIOSDATAPAGE;
+    passUpOrDie(caller, PGFAULTEXCEPT);
 }
 
 /* Passup Or Die */
-
-void passUpOrDie(pcb_t currProc, int ExeptInt) {
-    if(currProc.p_supportStruct == NULL) {
+void passUpOrDie(pcb_t *currProc, int ExeptInt) {
+    if(currProc->p_supportStruct == NULL) {
         Terminate_Process();
     }
-    if(currProc.p_supportStruct != NULL) {
+    if(currProc->p_supportStruct != NULL) {
         passUp(ExeptInt);
     }
 }

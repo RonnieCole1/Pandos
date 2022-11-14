@@ -8,10 +8,6 @@
 #include "/usr/include/umps3/umps/libumps.h"
 #include "p2test.c"
 
-/* global variables from scheduler.c */
-extern cpu_t TODStarted;
-extern cpu_t currentTOD;
-
 /* global variables from initial.c */
 extern int processCnt;
 extern int softBlockCnt;
@@ -19,16 +15,17 @@ extern pcb_t *readyQue;
 extern pcb_t *currentProc;
 extern int deviceSema4s[MAXDEVICECNT];
 
-void interruptHandler(){
+/* global variables from scheduler.c */
+extern cpu_t TODStarted;
+extern cpu_t currentTOD;
 
-    cpu_t stopped;
-    cpu_t remaining;
-    STCK(stopped);
-    remaining = getTIMER(); 
+void interruptHandler(){
+    STCK(currentTOD);
+    TODStarted = getTIMER(); 
 
     if ((((state_PTR) BIOSDATAPAGE)->s_cause & PRNTINT) !=0){
         if(currentProc != NULL){
-            currentProc->p_time = currentProc->p_time + (stopped-TODStarted);
+            currentProc->p_time = currentProc->p_time + (currentTOD - TODStarted);
             copyState(&(currentProc->p_s),((state_PTR) BIOSDATAPAGE));
             insertProcQ(&readyQue, currentProc);
             scheduler();
@@ -67,11 +64,10 @@ void interruptHandler(){
         devIntHelper(0x7);
                 }
     if(currentProc != NULL){
-        currentProc->p_time = currentProc->p_time + (stopped-TODStarted);
-        copyState(&(currentProc->p_s),((state_PTR) BIOSDATAPAGE));
-        Ready_Timer(currentProc, remaining);
-    }
-    else{
+        currentProc->p_time = currentProc->p_time + (currentTOD - TODStarted);
+        copyState(&(currentProc->p_s), ((state_PTR) BIOSDATAPAGE));
+        readyTimer(currentProc, TODStarted);
+    } else{
         HALT();
     }
 }
@@ -130,6 +126,7 @@ void devIntHelper(int tempnum){
         scheduler();
     }
 }
+
 void copyState(state_PTR first, state_PTR copy) {
     int i;
         for (i = 0; i < STATEREGNUM; i++) {
@@ -138,6 +135,5 @@ void copyState(state_PTR first, state_PTR copy) {
     copy->s_entryHI = first->s_entryHI;
     copy->s_cause = first->s_cause;
     copy->s_status = first->s_status;
-    copy->s_pc = first->s_pc;
-               
+    copy->s_pc = first->s_pc;  
 }

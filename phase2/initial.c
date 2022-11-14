@@ -98,17 +98,17 @@ void genExceptionHandler(){
     int exeCause;
     exeCause = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
+    /* Interrupt handler */
     if(exeCause == INTERRUPTHANDLER){
-        /*Pass along to interput handler (not yet implemented)*/
         interruptHNDLR();
     }
 
-    /*TLB Exceptions*/
+    /* TLB Exceptions */
     if(exeCause <= TLBEXCEPTS){
         TLB_TrapHandler();
     }
 
-    /*SYSCALL*/
+    /* SYSCALL */
     if(exeCause == SYSCALLEXECPTS){
         systemCall();
     }

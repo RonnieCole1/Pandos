@@ -37,6 +37,7 @@ void scheduler() {
         currentProc = removeProcQ(&readyQue);
         STCK(TODStarted);           /* Get the start time */
         setTIMER(TIMESLICE);        /* Load 5ms on PLT */
+        contSwitch(currentProc);    /* Load processor state */
     } else{
         currentProc = NULL;
 
@@ -55,6 +56,7 @@ void scheduler() {
         }
     }
 }
+
 void context_Switch(pcb_t *currProc){
     pcb_t *proc;
     proc = currProc;

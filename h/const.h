@@ -54,6 +54,8 @@
 #define	FALSE			    0
 #define HIDDEN			    static
 #define EOS				    '\0'
+#define SUCCESS             0
+#define FAILURE             -1
 
 #define NULL 			    ((void *)0xFFFFFFFF)
 
@@ -120,7 +122,6 @@
 #define GETSUPPORTPRT       8
 
 /* TLB Refill related constants*/
-
 #define HIGHENTRY           0x80000000
 #define LOWENTRY            0x00000000
 #define TLBSTATE            0x0FFFF000
