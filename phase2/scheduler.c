@@ -56,6 +56,7 @@ void scheduler() {
         }
     }
 }
+
 void context_Switch(pcb_t *currProc){
     pcb_t *proc;
     proc = currProc;
