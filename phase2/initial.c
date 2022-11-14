@@ -100,7 +100,6 @@ void genExceptionHandler(){
 
     /* Interrupt handler */
     if(exeCause == INTERRUPTHANDLER){
-        /*Pass along to interput handler (not yet implemented)*/
         interruptHNDLR();
     }
 
