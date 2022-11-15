@@ -13,6 +13,7 @@ typedef signed int cpu_t;
 
 typedef unsigned int memaddr;
 
+
 /* Device Register */
 typedef struct {
 	unsigned int d_status;
@@ -28,6 +29,7 @@ typedef struct {
 
 /*Clock Sema4*/
 #define ClockSema4 deviceSema4s[MAXDEVICECNT-1];
+
 
 /* Bus Register Area */
 typedef struct {

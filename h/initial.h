@@ -11,9 +11,7 @@
 *       Joe Pinkerton
 */
 
-#include "../h/types.h"
-
 extern int main();
-extern void genExceptionHandler();
-
+extern memaddr genExceptionHandler();
+extern void uTLB_RefillHandler();
 #endif
