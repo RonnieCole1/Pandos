@@ -11,6 +11,8 @@
 *       Joe Pinkerton
 */
 
+#include "../h/types.h"
+
 extern int main();
 extern void genExceptionHandler();
 

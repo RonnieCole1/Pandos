@@ -11,10 +11,9 @@
 *       Joe Pinkerton
 */
 
+#include "../h/types.h"
+
 extern void scheduler();
-extern void Load_State(state_PTR currentProcess);
-extern void myLDST(pcb_t *currProc);
-extern void Move_Process(pcb_PTR p);
-extern void uTLB_RefillHandler();
+extern void context_Switch(pcb_t *currProc);
 
 #endif

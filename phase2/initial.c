@@ -1,10 +1,12 @@
 #include "../h/pcb.h"
+#include "../h/asl.h"
 #include "../h/types.h"
 #include "../h/const.h"
 #include "../h/exceptions.h"
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
+#include "p2test.c"
 
 /************************************ Nucleus Initialization ****************************
  *
@@ -17,7 +19,6 @@
 */
 
 extern void test();
-extern void uTLB_RefillHandler();
 
 /* 
     Declare global variables 
@@ -101,17 +102,15 @@ void genExceptionHandler(){
     /* Interrupt handler */
     if(exeCause == INTERRUPTHANDLER){
         interruptHNDLR();
+    } else if(exeCause <= TLBEXCEPTS){
+        TLB_TrapHandler();
+    } else if(exeCause == SYSCALLEXECPTS){
+        systemCall();
+    } else{
+        programTRPHNDLR();
     }
 
     /* TLB Exceptions */
-    if(exeCause <= TLBEXCEPTS){
-        TLB_TrapHandler();
-    }
 
     /* SYSCALL */
-    if(exeCause == SYSCALLEXECPTS){
-        systemCall();
-    }
-
-    programTRPHNDLR();
 }
