@@ -14,6 +14,6 @@
 #include "../h/types.h"
 
 extern void scheduler();
-extern void context_Switch(pcb_t *currProc)
+extern void context_Switch(pcb_t *currProc);
 
 #endif

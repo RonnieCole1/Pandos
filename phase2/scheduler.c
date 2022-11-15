@@ -1,8 +1,6 @@
 #include "../h/pcb.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../h/exceptions.h"
-#include "../h/interrupts.h"
 #include "../h/initial.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
