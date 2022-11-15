@@ -96,11 +96,7 @@ void genExceptionHandler(){
     exeCause = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
     if(exeCause == INTERRUPTHANDLER){
-<<<<<<< HEAD
-        interruptHNDLR();           /* Interrupt handler */
-=======
         interruptHandler();
->>>>>>> 504f3d632c443e2bb5b6ad824e14586ff02ac533
     } else if(exeCause <= TLBEXCEPTS){
         TLB_TrapHandler();          /* TLB Exceptions */
     } else if(exeCause == SYSCALLEXECPTS){
@@ -108,12 +104,4 @@ void genExceptionHandler(){
     } else{
         programTRPHNDLR();
     }
-<<<<<<< HEAD
 }
-=======
-
-    /* TLB Exceptions */
-
-    /* SYSCALL */
-}
->>>>>>> 504f3d632c443e2bb5b6ad824e14586ff02ac533
