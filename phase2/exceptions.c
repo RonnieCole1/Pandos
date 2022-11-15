@@ -43,7 +43,7 @@ void systemCall() {
     caller->s_pc = caller->s_pc + 4;
 
     /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
-    //int sysNum = ((state_t *) BIOSDATAPAGE)->s_a0;
+    /*int sysNum = ((state_t *) BIOSDATAPAGE)->s_a0;*/
 
     switch(request) 
     {
@@ -162,7 +162,7 @@ void sys2Help(pcb_PTR head){
 and then blocked.*/
 void wait(state_PTR caller)
 {
-    //sysHelper(1);
+    /*sysHelper(1);*/
     sema4 = (int*) caller->s_a1;
     sema4++;
     if(sema4 < 0) {
@@ -177,7 +177,7 @@ void wait(state_PTR caller)
 and is unblocked/placed into the ReadyQue.*/
 void signal(state_PTR caller)
 {
-    //sysHelper(2);
+    /*sysHelper(2);*/
     sema4 = (int*) caller->s_a1;
     sema4++;
     if(sema4 <= 0) {
@@ -222,7 +222,7 @@ int Get_CPU_Time(state_PTR caller){
 /* Sys7 */
 void Wait_For_Clock(state_PTR caller)
 {
-    //sysHelper(3);
+    /*sysHelper(3);*/
     int semPClock = (int*) &(deviceSema4s[MAXDEVICECNT-1]);
     semPClock--;
     insertBlocked(semPClock, currentProc);
