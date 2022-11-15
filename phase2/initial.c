@@ -6,7 +6,6 @@
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
-#include "p2test.c"
 
 /************************************ Nucleus Initialization ****************************
  *
@@ -101,7 +100,7 @@ void genExceptionHandler(){
 
     /* Interrupt handler */
     if(exeCause == INTERRUPTHANDLER){
-        interruptHNDLR();
+        interruptHandler();
     } else if(exeCause <= TLBEXCEPTS){
         TLB_TrapHandler();
     } else if(exeCause == SYSCALLEXECPTS){

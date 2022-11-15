@@ -89,7 +89,7 @@ void Create_ProcessP(state_t *caller){
     pcb_PTR p = allocPcb();
     if(p == NULL){
         caller->s_v0 = FAILURE;
-        context_Switch(caller);         /*return CPU to caller */
+        contextSwitch(caller);         /*return CPU to caller */
     }
     processCnt++;
 
@@ -108,7 +108,7 @@ void Create_ProcessP(state_t *caller){
     caller->s_v0 = SUCCESS;
 
     /* return CPU to caller */
-    context_Switch(caller);
+    contextSwitch(caller);
 
     /*p->p_s = s_a1;*/
     /*p->p_supportStruct = p->p_s.s_a2;
@@ -170,7 +170,7 @@ void wait(state_PTR caller)
         insertProcQ(&readyQue, temp);
         BlockedSYS(currentProc);
     }
-    context_Switch(caller);
+    contextSwitch(caller);
 }
 
 /* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
@@ -184,7 +184,7 @@ void signal(state_PTR caller)
         pcb_t *p = removeProcQ(&(sema4));
         insertProcQ(&sema4, currentProc);
     }
-    context_Switch(caller);
+    contextSwitch(caller);
 }
 
 /* Sys5 */
@@ -212,7 +212,7 @@ int Get_CPU_Time(state_PTR caller){
 
     /*update start time */
     STCK(TODStarted);
-    context_Switch(caller);
+    contextSwitch(caller);
 
     /*double accumulatedTime = currentProc->p_time;
     currentTOD = (currentTOD - TODStarted) + accumulatedTime;*/
@@ -271,18 +271,18 @@ void passUpOrDie(pcb_t *currProc, int ExeptInt) {
 }
 
 void passUp(int ExeptInt) {
-    state_PTR tempstate = ((state_t *) BIOSDATAPAGE)->s_cause & GETEXECCODE;
+    /*state_PTR tempstate = ((state_t *) BIOSDATAPAGE)->s_cause & GETEXECCODE;
     currentProc->p_supportStruct->sup_exceptState[ExeptInt] = *tempstate;
     LDCXT(currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_stackPtr,
     currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_status,
-    currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_pc);
+    currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_pc);*/
 }
 
-/*void sysHelper(int optType) {
+void sysHelper(int optType) {
 	switch (optType)
 	{
 		case 0: /* P Operation */
-        		/*sema4 = (int) currentProc->p_s.s_a1;
+        		sema4 = (int) currentProc->p_s.s_a1;
         		sema4++;
         		if(sema4 < 0) {
             			pcb_PTR temp = removeBlocked(&sema4);
@@ -290,13 +290,13 @@ void passUp(int ExeptInt) {
             			BlockedSYS(currentProc);
         		}
     		case 1: /* V Operation */
-    			/*sema4 = (int) currentProc->p_s.s_a1;
+    			sema4 = (int) currentProc->p_s.s_a1;
         		sema4++;
         		if(sema4 <= 0) {
         		    	pcb_t *p = removeProcQ(&(sema4));
             			insertProcQ(&sema4, currentProc);
-        		}*/
-    		/*case 2: ;
+        		}
+    		case 2: ;
         		int semPClock; 
         		semPClock = deviceSema4s[MAXDEVICECNT-1];
         		semPClock--;
@@ -305,5 +305,5 @@ void passUp(int ExeptInt) {
             			BlockedSYS(currentProc);
         		}
         }
-    	context_Switch(currentProc);
-}*/
+    	contextSwitch(currentProc);
+}
