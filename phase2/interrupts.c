@@ -66,7 +66,9 @@ void interruptHandler(){
     if(currentProc != NULL){
         currentProc->p_time = currentProc->p_time + (currentTOD - TODStarted);
         copyState(&(currentProc->p_s), ((state_PTR) BIOSDATAPAGE));
-        readyTimer(currentProc, TODStarted);
+        STCK(TODStarted);
+        setTIMER(currentTOD);
+        contextSwitch(currentProc);
     } else{
         HALT();
     }
