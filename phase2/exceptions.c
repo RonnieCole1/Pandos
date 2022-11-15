@@ -278,11 +278,11 @@ void passUp(int ExeptInt) {
     currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_pc);
 }
 
-void sysHelper(int optType) {
+/*void sysHelper(int optType) {
 	switch (optType)
 	{
 		case 0: /* P Operation */
-        		sema4 = (int) currentProc->p_s.s_a1;
+        		/*sema4 = (int) currentProc->p_s.s_a1;
         		sema4++;
         		if(sema4 < 0) {
             			pcb_PTR temp = removeBlocked(&sema4);
@@ -290,13 +290,13 @@ void sysHelper(int optType) {
             			BlockedSYS(currentProc);
         		}
     		case 1: /* V Operation */
-    			sema4 = (int) currentProc->p_s.s_a1;
+    			/*sema4 = (int) currentProc->p_s.s_a1;
         		sema4++;
         		if(sema4 <= 0) {
         		    	pcb_t *p = removeProcQ(&(sema4));
             			insertProcQ(&sema4, currentProc);
-        		}
-    		case 2: ;
+        		}*/
+    		/*case 2: ;
         		int semPClock; 
         		semPClock = deviceSema4s[MAXDEVICECNT-1];
         		semPClock--;
@@ -306,4 +306,4 @@ void sysHelper(int optType) {
         		}
         }
     	context_Switch(currentProc);
-}
+}*/
