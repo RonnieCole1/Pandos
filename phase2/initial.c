@@ -18,8 +18,6 @@
  *      Joseph Counts
 */
 
-extern void test();
-
 /* 
     Declare global variables 
 */
@@ -74,8 +72,7 @@ int main(){
     if(currentProc != NULL){
         /*Set currentProc's state's stack pointer to our interval timer*/
         currentProc->p_s.s_sp = (memaddr) RAMTOP;
-        currentProc->p_s.s_pc = (memaddr) test; /* test function in p2test */
-        currentProc->p_s.s_t9 = (memaddr) test;
+        currentProc->p_s.s_pc = currentProc->p_s.s_t9 = (memaddr) test; /* test function in p2test */
         currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
         currentProc->p_supportStruct = NULL;
 
@@ -99,18 +96,13 @@ void genExceptionHandler(){
     int exeCause;
     exeCause = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
-    /* Interrupt handler */
     if(exeCause == INTERRUPTHANDLER){
-        interruptHNDLR();
+        interruptHNDLR();           /* Interrupt handler */
     } else if(exeCause <= TLBEXCEPTS){
-        TLB_TrapHandler();
+        TLB_TrapHandler();          /* TLB Exceptions */
     } else if(exeCause == SYSCALLEXECPTS){
-        systemCall();
+        systemCall();               /* SYSCALL */
     } else{
         programTRPHNDLR();
     }
-
-    /* TLB Exceptions */
-
-    /* SYSCALL */
 }
