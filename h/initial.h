@@ -12,6 +12,7 @@
 */
 
 extern int main();
-extern memaddr genExceptionHandler();
+extern void genExceptionHandler();
 extern void uTLB_RefillHandler();
+
 #endif

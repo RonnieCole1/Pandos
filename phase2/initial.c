@@ -18,6 +18,8 @@
 */
 
 extern void test();
+extern void uTLB_RefillHandler();
+extern void genExceptionHandler();
 
 /* 
     Declare global variables 
@@ -45,9 +47,9 @@ int main(){
     /* Populate the Processor 0 Pass Up Vector */
     passupvector_t *pvector;
     pvector = (passupvector_t *) PASSUPVECTOR;
-    /*pvector->tlb_refll_handler = (memaddr) uTLB_RefillHandler();*/
+    pvector->tlb_refll_handler = (memaddr) uTLB_RefillHandler;
     pvector->tlb_refll_stackPtr = KERNALSTACK;
-    pvector->execption_handler = (memaddr) genExceptionHandler();
+    pvector->execption_handler = (memaddr) genExceptionHandler;
     pvector->exception_stackPtr = KERNALSTACK;
 
     /* Initialize PCB and ASL data structures */
@@ -73,8 +75,7 @@ int main(){
     if(currentProc != NULL){
         /*Set currentProc's state's stack pointer to our interval timer*/
         currentProc->p_s.s_sp = (memaddr) RAMTOP;
-        currentProc->p_s.s_pc = (memaddr) test; /* test function in p2test */
-        currentProc->p_s.s_t9 = (memaddr) test;
+        currentProc->p_s.s_pc = currentProc->p_s.s_t9 = (memaddr) test; /* test function in p2test */
         currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
         currentProc->p_supportStruct = NULL;
 
@@ -98,18 +99,13 @@ void genExceptionHandler(){
     int exeCause;
     exeCause = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
-    /* Interrupt handler */
     if(exeCause == INTERRUPTHANDLER){
         interruptHandler();
     } else if(exeCause <= TLBEXCEPTS){
-        TLB_TrapHandler();
+        TLB_TrapHandler();          /* TLB Exceptions */
     } else if(exeCause == SYSCALLEXECPTS){
-        systemCall();
+        systemCall();               /* SYSCALL */
     } else{
         programTRPHNDLR();
     }
-
-    /* TLB Exceptions */
-
-    /* SYSCALL */
 }
