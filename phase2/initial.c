@@ -71,7 +71,7 @@ int main(){
     if(currentProc != NULL){
         /*Set currentProc's state's stack pointer to our interval timer*/
         currentProc->p_s.s_sp = (memaddr) RAMTOP;
-        currentProc->p_s.s_pc = currentProc->p_s.s_t9 = (memaddr) test; /* test function in p2test */
+        currentProc->p_s.s_pc = currentProc->p_s.s_t9 = (memaddr) test(); /* test function in p2test */
         currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
         currentProc->p_supportStruct = NULL;
 
