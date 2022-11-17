@@ -19,21 +19,26 @@ extern int deviceSema4s[MAXDEVICECNT];
 extern cpu_t TODStarted;
 extern cpu_t currentTOD;
 
+void debug(int i){
+    i = 4;
+}
+
 void interruptHandler(){
     STCK(currentTOD);
-    TODStarted = getTIMER(); 
+    TODStarted = getTIMER();
 
-    if ((((state_PTR) BIOSDATAPAGE)->s_cause & PRNTINT) !=0){
+
+    /*if ((((state_PTR) BIOSDATAPAGE)->s_cause & PRNTINT) !=0){
         if(currentProc != NULL){
             currentProc->p_time = currentProc->p_time + (currentTOD - TODStarted);
-            copyState(&(currentProc->p_s),((state_PTR) BIOSDATAPAGE));
+            copyState(&(currentProc->p_s), ((state_PTR) BIOSDATAPAGE));
             insertProcQ(&readyQue, currentProc);
             scheduler();
         }
         else{
             PANIC();
         }
-    }
+    }*/
 
     if((((state_PTR)BIOSDATAPAGE)->s_cause & 2) !=0){
         pcb_PTR temp;
@@ -51,19 +56,16 @@ void interruptHandler(){
         }
     }
     
-    if((((state_PTR)BIOSDATAPAGE)->s_cause & DISKINT)!=0){
+    if((((state_PTR)BIOSDATAPAGE)->s_cause & DISKINT) != 0){
         devIntHelper(0x3);
-    }
-    if((((state_PTR)BIOSDATAPAGE)->s_cause & FLASHINT)!=0){
+    } else if((((state_PTR)BIOSDATAPAGE)->s_cause & FLASHINT) != 0){
         devIntHelper(0x4);
-    }
-    if((((state_PTR)BIOSDATAPAGE)->s_cause & PRNTINT)!=0){     
+    } else if((((state_PTR)BIOSDATAPAGE)->s_cause & PRNTINT) != 0){     
         devIntHelper(0x6);
-    }
-    if((((state_PTR)BIOSDATAPAGE)->s_cause & TERMINT)!=0){
+    } else if((((state_PTR)BIOSDATAPAGE)->s_cause & TERMINT) != 0){
         devIntHelper(0x7);
-                }
-    if(currentProc != NULL){
+    }
+    if(currentProc != NULL){ 
         currentProc->p_time = currentProc->p_time + (currentTOD - TODStarted);
         copyState(&(currentProc->p_s), ((state_PTR) BIOSDATAPAGE));
         STCK(TODStarted);
@@ -101,7 +103,9 @@ void devIntHelper(int tempnum){
     } else{
         devNum = 7;
     }
+
     devSem = (((tempnum - 0x3)*DEVPERINT)+devNum);
+
     if(temp == TERMINT){
         volatile devregarea_t *devReg = (devregarea_t *) RAMBASEADDR;
         if((devReg->devreg[devSem].t_transm_status & 0x0F) != READY){
@@ -116,7 +120,9 @@ void devIntHelper(int tempnum){
         state = (devReg->devreg[devSem]).d_status;
         devReg->devreg[devSem].d_command= ACK;
     }
+
     deviceSema4s[devSem] += 1;
+
     if(deviceSema4s[devSem] <= 0){
         temp = removeBlocked(&(deviceSema4s[devSem]));
         temp->p_s.s_v0 = state;
@@ -131,11 +137,11 @@ void devIntHelper(int tempnum){
 
 void copyState(state_PTR first, state_PTR copy) {
     int i;
-        for (i = 0; i < STATEREGNUM; i++) {
-            copy->s_reg[i] = first->s_reg[i];
-        }
     copy->s_entryHI = first->s_entryHI;
     copy->s_cause = first->s_cause;
     copy->s_status = first->s_status;
-    copy->s_pc = first->s_pc;  
+    copy->s_pc = first->s_pc;
+    for (i = 0; i < STATEREGNUM; i++) {
+        copy->s_reg[i] = first->s_reg[i];
+    }
 }

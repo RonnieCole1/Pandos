@@ -260,22 +260,32 @@ void TLB_TrapHandler() {
     passUpOrDie(caller, PGFAULTEXCEPT);
 }
 
-/* Passup Or Die */
-void passUpOrDie(pcb_t *currProc, int ExeptInt) {
+/* 
+    Passup Or Die 
+*/
+void passUpOrDie(pcb_PTR currProc, int reason) {
     if(currProc->p_supportStruct == NULL) {
         Terminate_Process();
     }
     if(currProc->p_supportStruct != NULL) {
-        passUp(ExeptInt);
+        passUp(reason);
     }
 }
 
 void passUp(int ExeptInt) {
-    /*state_PTR tempstate = ((state_t *) BIOSDATAPAGE)->s_cause & GETEXECCODE;
-    currentProc->p_supportStruct->sup_exceptState[ExeptInt] = *tempstate;
-    LDCXT(currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_stackPtr,
-    currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_status,
-    currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_pc);*/
+    state_t *tempstate = (((state_t *) BIOSDATAPAGE)->s_cause & GETEXECCODE);
+    currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_cause = tempstate->s_cause;
+    currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_entryHI = tempstate->s_entryHI;
+    currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_pc = tempstate->s_pc;
+    currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_status = tempstate->s_status;
+
+    int i;
+    for(i = 0; i < STATEREGNUM; i++){
+        currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_reg[i] = tempstate->s_reg[i];
+    }
+
+    copyState(tempstate, currentProc->p_supportStruct->sup_exceptState[ExeptInt]);
+    LDCXT(currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_stackPtr, currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_status, currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_pc);
 }
 
 void sysHelper(int optType) {

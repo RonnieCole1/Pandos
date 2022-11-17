@@ -99,11 +99,11 @@ void genExceptionHandler(){
     int exeCause;
     exeCause = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
-    if(exeCause == INTERRUPTHANDLER){
-        interruptHandler();
-    } else if(exeCause <= TLBEXCEPTS){
+    if((exeCause & INTERRUPTHANDLER) == INTERRUPTHANDLER){
+        interruptHandler();         /* Interrupt Handler */
+    } else if((exeCause & TLBEXCEPTS) <= TLBEXCEPTS){
         TLB_TrapHandler();          /* TLB Exceptions */
-    } else if(exeCause == SYSCALLEXECPTS){
+    } else if((exeCause & SYSCALLEXECPTS) == exeCause){
         systemCall();               /* SYSCALL */
     } else{
         programTRPHNDLR();
