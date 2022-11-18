@@ -206,9 +206,9 @@ void Wait_for_IO_Device(state_PTR caller){
     }
 
     if(lineNum == TERMINT && read == TRUE){
-        index = DEVPERINT * (lineNum - 2 + read) + deviceNumber;
+        index = DEVPERINT * (lineNum - 3 + read) + deviceNumber;
     } else{
-        index = DEVPERINT * (lineNum - 2) + deviceNumber;
+        index = DEVPERINT * (lineNum - 3) + deviceNumber;
     }
 
     sem = &(deviceSema4s[index]);
