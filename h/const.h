@@ -18,7 +18,7 @@
 #define MAXINT              ((void *)0xFFFFFFFF)
 
 /* define milliseconds */
-#define MILLI               100
+#define MILLI               100000
 
 /* define CPU burst time */
 #define TIMESLICE 		    5000			
@@ -66,10 +66,10 @@
 #define PRNTINT 		    6
 #define TERMINT			    7
 
-#define DEVINTNUM		    5		  /* interrupt lines used by devices */
-#define DEVPERINT		    8		  /* devices per interrupt line */
-#define DEVREGLEN		    4		  /* device register field length in bytes, and regs per dev */	
-#define DEVREGSIZE	        16 		/* device register size in bytes */
+#define DEVINTNUM		    5		    /* interrupt lines used by devices */
+#define DEVPERINT		    8		    /* devices per interrupt line */
+#define DEVREGLEN		    4		    /* device register field length in bytes, and regs per dev */	
+#define DEVREGSIZE	        16          /* device register size in bytes */
 
 /* device register field number for non-terminal devices */
 #define STATUS			    0
@@ -82,6 +82,19 @@
 #define RECVCOMMAND 	    1
 #define TRANSTATUS  	    2
 #define TRANCOMMAND 	    3
+
+/* device and line number bits on */
+#define FIRST               0x1
+#define SECOND              0x2
+#define THIRD               0x4
+#define FOURTH              0x8
+#define FIFTH               0x10
+#define SIXTH               0x20
+#define SEVENTH             0x40
+#define EIGHTH              0x80
+
+/* start of interrupt device bitmap and registers */
+
 
 /* device common STATUS codes */
 #define UNINSTALLED		    0
@@ -105,8 +118,6 @@
 /* Exceptions related constants */
 #define	PGFAULTEXCEPT	    0
 #define GENERALEXCEPT	    1
-
-/* Exception related constaints */
 #define INTERRUPTHANDLER    0
 #define TLBEXCEPTS          3
 #define SYSCALLEXECPTS      8

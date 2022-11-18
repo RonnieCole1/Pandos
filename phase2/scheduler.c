@@ -16,7 +16,7 @@
 */
 
 /* global variables maintaining time usage*/
-cpu_t TODStarted;
+extern cpu_t TODStarted;
 cpu_t currentTOD;
 
 /* global variables from initial.c */

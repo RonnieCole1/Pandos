@@ -26,6 +26,5 @@ extern void programTRPHNDLR();
 extern void TLB_TrapHandler();
 extern void passUpOrDie(state_PTR caller, int reason);
 extern void passUP(int ExeptInt);
-extern void sysHelper(int optType);
 
 #endif

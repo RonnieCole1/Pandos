@@ -32,7 +32,7 @@ extern int deviceSema4s[MAXDEVICECNT];
 /* Syscall Handler. We take what is in register a_0 from the BIOSDATAPAGE, which is our sysnumber, and check its value from 1 to 8. If our
 sysNum is greater than 8, we pass up or die.*/
 void systemCall() {
-
+    /* local variables */
     state_t* caller;
     int request;
 
@@ -41,9 +41,6 @@ void systemCall() {
     request = caller->s_a0;
 
     caller->s_pc = caller->s_pc + 4;
-
-    /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
-    /*int sysNum = ((state_t *) BIOSDATAPAGE)->s_a0;*/
 
     switch(request) 
     {
@@ -155,14 +152,13 @@ void sys2Help(pcb_PTR head){
 
     /* free after no more children */
     freePcb(head);
-    --processCnt;
+    processCnt--;
 }
 
 /* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
 and then blocked.*/
 void wait(state_PTR caller)
 {
-    /*sysHelper(1);*/
     sema4 = (int*) caller->s_a1;
     sema4++;
     if(sema4 < 0) {
@@ -170,6 +166,7 @@ void wait(state_PTR caller)
         insertProcQ(&readyQue, temp);
         BlockedSYS(currentProc);
     }
+    softBlockCnt++;
     contextSwitch(caller);
 }
 
@@ -177,12 +174,11 @@ void wait(state_PTR caller)
 and is unblocked/placed into the ReadyQue.*/
 void signal(state_PTR caller)
 {
-    /*sysHelper(2);*/
     sema4 = (int*) caller->s_a1;
     sema4++;
     if(sema4 <= 0) {
         pcb_t *p = removeProcQ(&(sema4));
-        insertProcQ(&sema4, currentProc);
+        insertProcQ(&(sema4), currentProc);
     }
     contextSwitch(caller);
 }
@@ -213,10 +209,6 @@ int Get_CPU_Time(state_PTR caller){
     /*update start time */
     STCK(TODStarted);
     contextSwitch(caller);
-
-    /*double accumulatedTime = currentProc->p_time;
-    currentTOD = (currentTOD - TODStarted) + accumulatedTime;*/
-    
 }
 
 /* Sys7 */
