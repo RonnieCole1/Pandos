@@ -36,7 +36,7 @@ void scheduler() {
         currentProc = removeProcQ(&readyQue);
         STCK(TODStarted);           /* Get the start time */
         setTIMER(TIMESLICE);        /* Load 5ms on PLT */
-        contextSwitch(currentProc);    /* Load processor state */
+        LDST(&(currentProc->p_s));    /* Load processor state */
     } else{
         currentProc = NULL;
 
@@ -54,10 +54,4 @@ void scheduler() {
             }
         }
     }
-}
-
-void contextSwitch(pcb_t *currProc){
-    pcb_t *proc;
-    proc = currProc;
-    LDST(&(proc->p_s));
 }
