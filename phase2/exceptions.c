@@ -31,26 +31,12 @@ extern int deviceSema4s[MAXDEVICECNT];
 sysNum is greater than 8, we pass up or die.*/
 void systemCall() {
     /* local variables */
-    state_PTR caller, pgm;
+    state_PTR caller;
     int request;
-    unsigned int status, temp;
 
     /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
     caller = (state_PTR) BIOSDATAPAGE;
     request = caller->s_a0;
-    status = caller->s_status;
-
-    /*if((request > 0) && (request < 9) && ((status & USERPON) != ALLOFF)){
-        pgm = (state_PTR) BIOSDATAPAGE;
-        copyState(caller, pgm);     /* sys is 1-8 and not in kernel mode */
-
-        /* set cause to priviledged instruction exception */
-        /*temp = (pgm->s_cause) & ~(0xFF);
-        (pgm->s_cause) = (temp | (10 << 2));
-
-        /* fake program trap */
-        /*programTRPHNDLR();
-    }*/
 
     caller->s_pc = caller->s_pc + 4;
 
@@ -98,7 +84,7 @@ void Create_ProcessP(state_t *caller){
     pcb_PTR p = allocPcb();
     if(p == NULL){
         caller->s_v0 = FAILURE;
-        contextSwitch(caller);         /*return CPU to caller */
+        LDST(caller);         /*return CPU to caller */
     }
     processCnt++;
 
