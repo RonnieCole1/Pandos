@@ -28,7 +28,8 @@ int processCnt;          /* int indicating the number of strated, but not yet te
 int softBlockCnt;       /* number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
 pcb_t *readyQue;        /* tail pointer to a queue of pcbs that are in the "ready" state */
 pcb_t *currentProc;     /* pointer to the pcb that is in the "running" state */
-int deviceSema4s[MAXDEVICECNT]; 
+int deviceSema4s[MAXDEVICECNT];
+cpu_t TODStarted;
 
 /* 
     Programs entry point performing the Nucleus initialization
@@ -37,12 +38,13 @@ int main(){
 
     /* Define RAMTOP, and have it refer to the last frame */
     memaddr RAMTOP;
-    RAMTOP = RAMBASESIZE + RAMBASEADDR;
+    /*RAMTOP = RAMBASESIZE + RAMBASEADDR;*/
 
     /* set interval timer to 100 milliseconds */
     devregarea_t *top;
     top = (devregarea_t *) RAMBASEADDR;
     top->intervaltimer = 100;
+    RAMTOP = top->rambase + top->ramsize;
 
     /* Populate the Processor 0 Pass Up Vector */
     passupvector_t *pvector;
@@ -100,7 +102,7 @@ void genExceptionHandler(){
     exeCause = (oldState->s_cause & GETEXECCODE) >> CAUSESHIFT;
 
     if(exeCause == INTERRUPTHANDLER){
-        interruptHandler();
+        interruptHandler();         /* Interrupt Handler */
     } else if(exeCause <= TLBEXCEPTS){
         TLB_TrapHandler();          /* TLB Exceptions */
     } else if(exeCause == SYSCALLEXECPTS){

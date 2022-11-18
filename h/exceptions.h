@@ -24,8 +24,7 @@ extern void Wait_For_Clock(state_PTR caller);
 extern void Get_SUPPORT_Data();
 extern void programTRPHNDLR();
 extern void TLB_TrapHandler();
-extern void passUpOrDie(int ExeptInt);
-
-
+extern void passUpOrDie(state_PTR caller, int reason);
+extern void passUP(int ExeptInt);
 
 #endif
