@@ -16,8 +16,8 @@
 */
 
 /* global variables maintaining time usage*/
-extern cpu_t TODStarted;
-cpu_t currentTOD;
+extern cpu_t TODStarted; /* Once initilized in scheduler(), it keeps track of the time since process started. */
+extern cpu_t currentTOD; /* Used relative to TODStarted to find CPU time */
 
 /* global variables from initial.c */
 extern int processCnt;
@@ -25,33 +25,39 @@ extern int softBlockCnt;
 extern pcb_t *readyQue;
 extern pcb_t *currentProc;
 
+
 void scheduler() {
-    if(currentProc != NULL){
-        STCK(currentTOD);
-        currentProc->p_time = (currentProc->p_time) + (currentTOD - TODStarted);
+	/*Process is pulled off of the ready Que*/
+	pcb_t *p = removeProcQ(&readyQue);
+	/*If this new process is not NULL...*/
+    if(p != NULL){
+    	currentProc = p;
+    	/*Start our TODStarted Clock.*/
+        STCK(TODStarted);
+        /*Set our timer to our timeslice (quantom)*/
+        setTIMER(TIMESLICE);
+        myLDST(&(currentProc->p_s));
     }
-
-    /* Dispatch the "next" process in the Ready Queue */
-    if(!emptyProcQ(readyQue)){      
-        currentProc = removeProcQ(&readyQue);
-        STCK(TODStarted);           /* Get the start time */
-        setTIMER(TIMESLICE);        /* Load 5ms on PLT */
-        LDST(&(currentProc->p_s));    /* Load processor state */
-    } else{
-        currentProc = NULL;
-
-        /* Job well done*/
-        if(processCnt == 0){
-            HALT();
-        } else{
-            if(softBlockCnt != 0){
-                /* wait */
-                setSTATUS((getSTATUS() | ALLOFF | IEPON | IMON | TEBITON));
+    if (processCnt == 0) {
+        HALT();
+    }
+    if (processCnt != 0) {
+    	if(softBlockCnt != 0){
+        	/* wait */
+                setTIMER(LARGETIMEVALUE);
+                setSTATUS(ALLOFF | IECON | IMON);
                 WAIT();
-            } else{
+            }
+         if(softBlockCnt ==0) {
                 /* deadlock */
                 PANIC();
             }
-        }
     }
 }
+
+/* Created for the sake of debugging purposes. Atomically load our processor state with state s*/
+void myLDST(state_PTR s) {
+	LDST(s);
+}
+
+

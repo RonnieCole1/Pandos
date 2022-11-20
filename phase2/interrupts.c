@@ -14,8 +14,6 @@ extern int softBlockCnt;
 extern pcb_t *readyQue;
 extern pcb_t *currentProc;
 extern int deviceSema4s[MAXDEVICECNT];
-
-/* global variables from scheduler.c */
 extern cpu_t TODStarted;
 
 void debug(int i){
