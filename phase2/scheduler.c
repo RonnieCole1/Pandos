@@ -15,6 +15,7 @@
  *      Joseph Counts
 */
 
+
 /* global variables maintaining time usage*/
 extern cpu_t TODStarted; /* Once initilized in scheduler(), it keeps track of the time since process started. */
 extern cpu_t currentTOD; /* Used relative to TODStarted to find CPU time */

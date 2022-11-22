@@ -61,12 +61,32 @@
 
 #define NULL 			    ((void *)0xFFFFFFFF)
 
+#define D0 0x00000001
+#define D1 0x00000002
+#define D2 0x00000004
+#define D3 0x00000008
+#define D4 0x00000010
+#define D5 0x00000020
+#define D6 0x00000040
+#define D7 0x00000080
+
 /* device interrupts */
-#define DISKINT			    3
-#define FLASHINT 		    4
-#define NETWINT 		    5
-#define PRNTINT 		    6
-#define TERMINT			    7
+#define PLT 1
+#define TIMER 2
+#define DISK 3
+#define FLASH 4
+#define NETWORK 5
+#define PRINTER 6
+#define TERMINAL 7
+
+
+#define PLTINT 0x00000200 
+#define PSUINT 0x00000400 
+
+#define DISKINT 0x00000800 
+#define FLASHINT 0x00001000    
+#define PRNTINT 0x00004000  
+#define TERMINT 0x00008000 
 
 #define DEVINTNUM		    5		    /* interrupt lines used by devices */
 #define DEVPERINT		    8		    /* devices per interrupt line */

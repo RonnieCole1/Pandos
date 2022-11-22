@@ -244,7 +244,7 @@ void Wait_for_IO_Device(state_PTR caller){
     int waitForTermRead = currentProc->p_s.s_a3;
     
     /* In order to preform the nessesary P operation on our device semaphore, we obtain it...*/
-    dnum = dnum + (lineNumber - DISKINT) * DEVPERINT;
+    dnum = getDeviceSemaphore(dnum, lineNumber);
     
     /*Check if our device semaphore is waiting for TRO and if it is equal to TERMINT*/
     if ((dnum == TERMINT) && (waitForTermRead)) {
@@ -271,7 +271,7 @@ int Get_CPU_Time(state_PTR caller){
     /* Obtain CurrentTOD clock time */
     STCK(currentTOD);
     /* Find the difference in between TOD clocks to find accumulated time IN ADDITION to currentProc's CPU time*/
-    currentTOD = (currentTOD - TODStarted) + currentProc->p_time;
+    currentTOD = getAccumulatedTime(currentTOD, TODStarted);
     /* Send up our current time to v0 */
     currentProc->p_s.s_v0 = currentTOD;
     myLDST(caller);
@@ -341,6 +341,14 @@ void passUpOrDie(int type) {
     } else{
         passUp(type);
     }
+}
+
+int getDeviceSemaphore(int dnum, int linenum) {
+	return (dnum + (linenum - DISKINT) * DEVPERINT);
+}
+
+cpu_t getAccumulatedTime(cpu_t current, cpu_t started) {
+	return ((current - started) + currentProc->p_time);
 }
 
 /* 
