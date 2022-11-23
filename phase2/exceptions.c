@@ -34,7 +34,7 @@ void systemCall() {
     state_PTR caller;
     int request;
 
-    /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
+    /* Set the a_0 register of the BIOSDATAPAGE to caller.*/
     caller = (state_PTR) BIOSDATAPAGE;
     request = caller->s_a0;
 
@@ -44,30 +44,30 @@ void systemCall() {
     {
         case CREATEPROCESS:
             Create_ProcessP(caller);
-        break;
+            break;
         case TERMINATEPROCESS:
             Terminate_Process();
-        break;
+            break;
         case PASSEREN:
             wait(caller);
-        break;
+            break;
         case VERHOGEN:
             signal(caller);
-        break;
+            break;
         case WAITIO:
             Wait_for_IO_Device(caller);
-        break;
+            break;
         case GETCPUTIME:
             Get_CPU_Time(caller);
-        break;
+            break;
         case WAITCLOCK:
             Wait_For_Clock(caller);
-        break;
+            break;
         case GETSUPPORTPRT:
             Get_SUPPORT_Data();
-        break;
+            break;
         default:
-        /* If we reach here, our sysNum is not between 1-8. We passupordie*/
+            /* If we reach here, our sysNum is not between 1-8. We passupordie*/
             passUpOrDie(caller, GENERALEXCEPT);
     }
     PANIC();
@@ -125,6 +125,7 @@ void Terminate_Process(){
 /* Recursively removes all the children of head */
 void sys2Help(pcb_PTR head){
     while(!emptyChild(head)){
+        /* nuke it */
         sys2Help(removeChild(head));
     }
 
@@ -134,7 +135,7 @@ void sys2Help(pcb_PTR head){
         if(sem >= &(deviceSema4s[0]) && sem <= &(deviceSema4s[MAXDEVICECNT - 1])){
             softBlockCnt--;
         } else{
-            ++(*sem);                   /* increment semaphore */
+            (*sem)++;                   /* increment semaphore */
         }
     } else if(head == currentProc){
         /* remove process from its parent */
@@ -149,27 +150,32 @@ void sys2Help(pcb_PTR head){
     processCnt--;
 }
 
-/* System Call 3: Preforms a "P" operation or a wait operation. The semaphore is decremented
-and then blocked.*/
-void wait(state_PTR caller)
-{
+/* 
+    System Call 3: Performs a "P" operation or a wait operation. The semaphore is decremented
+    and then blocked.
+*/
+void wait(state_PTR caller){
     int* sema4 = (int*) caller->s_a1;
     (*sema4)--;
-    if(*sema4 < 0) {
+    if((*sema4) < 0){
+        /* something has control of the sema4 */
         copyState(caller, &(currentProc->p_s));
         insertBlocked(sema4, currentProc);
         scheduler();
     }
-    LDST(caller);
+    LDST(caller);       /* nothing had control of sema4, return control to caller */
 }
 
-/* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
-and is unblocked/placed into the ReadyQue.*/
+/* 
+    System Call 4: Performs a "V" operation or a signal operation. The semaphore is incremented
+    and is unblocked/placed into the ReadyQue.
+*/
 void signal(state_PTR caller){
-    pcb_PTR p = NULL;
+    pcb_PTR p = NULL;       /* new process */
     int* sema4 = (int*) caller->s_a1;
     (*sema4)++;   /* increment semaphore */
     if((*sema4) <= 0) {
+        /* something is waiting on the sema4 */
         p = removeBlocked(sema4);
         if(p != NULL){
             /* add to ready queue */
@@ -182,17 +188,19 @@ void signal(state_PTR caller){
 
 /* Sys5 */
 void Wait_for_IO_Device(state_PTR caller){
-    int lineNum, deviceNumber, read, index, *sem;
+    int lineNum, deviceNumber, waitForTermRead, index;
+    int *sem;
     lineNum = caller->s_a1;
     deviceNumber = caller->s_a2;
-    read = caller->s_a3;    /* terminal read/write */
+    waitForTermRead = caller->s_a3;    /* terminal read/write */
 
     if(lineNum < DISKINT || lineNum > TERMINT){
-        Terminate_Process();
+        Terminate_Process();        /* illegal IO wait request */
     }
 
-    if(lineNum == TERMINT && read == TRUE){
-        index = DEVPERINT * (lineNum - 3 + read) + deviceNumber;
+    /* which device */
+    if(lineNum == TERMINT && waitForTermRead == TRUE){
+        index = DEVPERINT * (lineNum - 3 + waitForTermRead) + deviceNumber;
     } else{
         index = DEVPERINT * (lineNum - 3) + deviceNumber;
     }
@@ -223,7 +231,9 @@ int Get_CPU_Time(state_PTR caller){
     LDST(caller);
 }
 
-/* Sys7 */
+/* 
+    Sys7: Wait_For_Clock
+*/
 void Wait_For_Clock(state_PTR caller){
     int* semPClock = (int*) &(deviceSema4s[MAXDEVICECNT-1]);
     (*semPClock)--;
