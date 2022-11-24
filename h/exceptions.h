@@ -13,14 +13,18 @@
 
 #include "../h/types.h"
 
-extern void SYSCALL();
-extern void Create_ProcessP();
+extern void systemCall();
+extern void Create_ProcessP(state_t *caller);
 extern void Terminate_Process();
-extern pcb_t *wait();
-extern pcb_t *signal();
-extern void Wait_for_IO_Device();
-extern int Get_CPU_Time();
-extern void Wait_For_Clock();
-extern void BlockedSYS();
+extern void wait(state_PTR caller);
+extern void signal(state_PTR caller);
+extern void Wait_for_IO_Device(state_PTR caller);
+extern int Get_CPU_Time(state_PTR caller);
+extern void Wait_For_Clock(state_PTR caller);
+extern void Get_SUPPORT_Data();
+extern void programTRPHNDLR();
+extern void TLB_TrapHandler();
+extern void passUpOrDie(state_PTR caller, int reason);
+extern void passUP(int ExeptInt);
 
 #endif

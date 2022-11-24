@@ -18,10 +18,12 @@
 #define MAXINT              ((void *)0xFFFFFFFF)
 
 /* define milliseconds */
-#define MILLI               100
+#define MILLI               100000
 
 /* define CPU burst time */
-#define TIMESLICE 		    5000			
+#define TIMESLICE 		    5000
+
+#define LARGETIMEVALUE		0xFFFFFFFF			
 
 /* define MAXDEVICECNT */
 #define MAXDEVICECNT        49
@@ -34,12 +36,12 @@
 #define CAUSESHIFT          2
 
 /* status register commands */
-#define ALLOFF              0x00000000
-#define USERPON             0x00000008
-#define IEPON               0x00000004
-#define IEMON               0x00000001
-#define IMON                0x0000FF00
-#define TEBITON             0x00000000
+#define ALLOFF              0x0
+#define USERPON             0x00000008 /*usermode on (previous)*/
+#define IEPON               0x00000004 /*interupts on (previous)*/
+#define IECON               0x00000001 /*interupts on (current)*/
+#define IMON                0x0000FF00 /*interupt mask*/
+#define TEBITON             0x08000000 /*Timer enabled bit on*/
 
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR		    0x10000000
@@ -54,20 +56,42 @@
 #define	FALSE			    0
 #define HIDDEN			    static
 #define EOS				    '\0'
+#define SUCCESS             0
+#define FAILURE             -1
 
 #define NULL 			    ((void *)0xFFFFFFFF)
 
-/* device interrupts */
-#define DISKINT			    3
-#define FLASHINT 		    4
-#define NETWINT 		    5
-#define PRNTINT 		    6
-#define TERMINT			    7
+#define D0 0x00000001
+#define D1 0x00000002
+#define D2 0x00000004
+#define D3 0x00000008
+#define D4 0x00000010
+#define D5 0x00000020
+#define D6 0x00000040
+#define D7 0x00000080
 
-#define DEVINTNUM		    5		  /* interrupt lines used by devices */
-#define DEVPERINT		    8		  /* devices per interrupt line */
-#define DEVREGLEN		    4		  /* device register field length in bytes, and regs per dev */	
-#define DEVREGSIZE	        16 		/* device register size in bytes */
+/* device interrupts */
+#define PLT 1
+#define TIMER 2
+#define DISK 3
+#define FLASH 4
+#define NETWORK 5
+#define PRINTER 6
+#define TERMINAL 7
+
+
+#define PLTINT 0x00000200 
+#define PSUINT 0x00000400 
+
+#define DISKINT 0x00000800 
+#define FLASHINT 0x00001000    
+#define PRNTINT 0x00004000  
+#define TERMINT 0x00008000 
+
+#define DEVINTNUM		    5		    /* interrupt lines used by devices */
+#define DEVPERINT		    8		    /* devices per interrupt line */
+#define DEVREGLEN		    4		    /* device register field length in bytes, and regs per dev */	
+#define DEVREGSIZE	        16          /* device register size in bytes */
 
 /* device register field number for non-terminal devices */
 #define STATUS			    0
@@ -80,6 +104,19 @@
 #define RECVCOMMAND 	    1
 #define TRANSTATUS  	    2
 #define TRANCOMMAND 	    3
+
+/* device and line number bits on */
+#define FIRST               0x1
+#define SECOND              0x2
+#define THIRD               0x4
+#define FOURTH              0x8
+#define FIFTH               0x10
+#define SIXTH               0x20
+#define SEVENTH             0x40
+#define EIGHTH              0x80
+
+/* start of interrupt device bitmap and registers */
+
 
 /* device common STATUS codes */
 #define UNINSTALLED		    0
@@ -103,8 +140,6 @@
 /* Exceptions related constants */
 #define	PGFAULTEXCEPT	    0
 #define GENERALEXCEPT	    1
-
-/* Exception related constaints */
 #define INTERRUPTHANDLER    0
 #define TLBEXCEPTS          3
 #define SYSCALLEXECPTS      8
@@ -120,7 +155,6 @@
 #define GETSUPPORTPRT       8
 
 /* TLB Refill related constants*/
-
 #define HIGHENTRY           0x80000000
 #define LOWENTRY            0x00000000
 #define TLBSTATE            0x0FFFF000
@@ -132,7 +166,7 @@
 #define	ALIGNED(A)		(((unsigned)A & 0x3) == 0)
 
 /* Psuedo Clock Time*/
-#define PCLOCKTIME 100000;
+#define PCLOCKTIME 100000
 
 /* Macro to load the Interval Timer */
 #define LDIT(T)	((* ((cpu_t *) INTERVALTMR)) = (T) * (* ((cpu_t *) TIMESCALEADDR))) 

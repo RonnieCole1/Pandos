@@ -53,7 +53,7 @@ pcb_PTR allocPcb()
     temp->p_sibn = NULL;
 
     /* process status */
-    temp->p_s = NULL;
+    /*temp->p_s = NULL;*/
     temp->p_time = 0;
     temp->p_semAdd = NULL;
 
@@ -159,7 +159,7 @@ pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p){
     }
 
     /* Check if there is a single element. If there is, just remove it. */
-    if((*tp->p_next)==p)
+    if(((*tp)->p_next)==p)
     {
         return removeProcQ(*tp);
     }

@@ -13,5 +13,6 @@
 
 extern int main();
 extern void genExceptionHandler();
+extern void uTLB_RefillHandler();
 
 #endif
