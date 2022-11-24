@@ -21,9 +21,7 @@
 #define MILLI               100000
 
 /* define CPU burst time */
-#define TIMESLICE 		    5000
-
-#define LARGETIMEVALUE		0xFFFFFFFF			
+#define TIMESLICE 		    5000			
 
 /* define MAXDEVICECNT */
 #define MAXDEVICECNT        49
@@ -37,11 +35,11 @@
 
 /* status register commands */
 #define ALLOFF              0x0
-#define USERPON             0x00000008 /*usermode on (previous)*/
-#define IEPON               0x00000004 /*interupts on (previous)*/
-#define IECON               0x00000001 /*interupts on (current)*/
-#define IMON                0x0000FF00 /*interupt mask*/
-#define TEBITON             0x08000000 /*Timer enabled bit on*/
+#define USERPON             0x00000008
+#define IEPON               0x00000004
+#define IEMON               0x00000001
+#define IMON                0x0000FF00
+#define TEBITON             0x08000000
 
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR		    0x10000000
@@ -61,32 +59,12 @@
 
 #define NULL 			    ((void *)0xFFFFFFFF)
 
-#define D0 0x00000001
-#define D1 0x00000002
-#define D2 0x00000004
-#define D3 0x00000008
-#define D4 0x00000010
-#define D5 0x00000020
-#define D6 0x00000040
-#define D7 0x00000080
-
 /* device interrupts */
-#define PLT 1
-#define TIMER 2
-#define DISK 3
-#define FLASH 4
-#define NETWORK 5
-#define PRINTER 6
-#define TERMINAL 7
-
-
-#define PLTINT 0x00000200 
-#define PSUINT 0x00000400 
-
-#define DISKINT 0x00000800 
-#define FLASHINT 0x00001000    
-#define PRNTINT 0x00004000  
-#define TERMINT 0x00008000 
+#define DISKINT			    3
+#define FLASHINT 		    4
+#define NETWINT 		    5
+#define PRNTINT 		    6
+#define TERMINT			    7
 
 #define DEVINTNUM		    5		    /* interrupt lines used by devices */
 #define DEVPERINT		    8		    /* devices per interrupt line */

@@ -20,22 +20,16 @@
 extern void test();
 extern void uTLB_RefillHandler();
 extern void genExceptionHandler();
-extern void scheduler();
 
-int processCnt; /* Integer indicating the number of started, but not yet terminated processes */
-
-int softBlockCnt; /* Number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
-
-pcb_t *readyQue; /* tail pointer to a queue of pcbs that are in the "ready" state */
-
-pcb_t *currentProc; /* pointer to the pcb that is in the "running" state */
-
-int deviceSema4s[MAXDEVICECNT]; /* Integer array of device semaphores including our Pseudoclock semaphore */
-
-cpu_t TODStarted; /* Global variable used to keep track of the time since our process started */
-
-cpu_t currentTOD; /* Used relative to TODStarted to find CPU time */
-
+/* 
+    Declare global variables 
+*/
+int processCnt;          /* int indicating the number of strated, but not yet terminated processes */
+int softBlockCnt;       /* number of started, but not terminated processes that are in the "blocked" statevdue to an I/O or timer request*/
+pcb_t *readyQue;        /* tail pointer to a queue of pcbs that are in the "ready" state */
+pcb_t *currentProc;     /* pointer to the pcb that is in the "running" state */
+int deviceSema4s[MAXDEVICECNT];
+cpu_t TODStarted;
 
 /* 
     Programs entry point performing the Nucleus initialization
@@ -43,9 +37,13 @@ cpu_t currentTOD; /* Used relative to TODStarted to find CPU time */
 int main(){
 
     /* Define RAMTOP, and have it refer to the last frame */
-    devregarea_t* dBus = (devregarea_t*) RAMBASEADDR;
-    int RAMTOP = (dBus->rambase + dBus->ramsize);
+    memaddr RAMTOP;
 
+    /* set interval timer to 100 milliseconds */
+    devregarea_t *top;
+    top = (devregarea_t *) RAMBASEADDR;
+    top->intervaltimer = 100;
+    RAMTOP = top->rambase + top->ramsize;
 
     /* Populate the Processor 0 Pass Up Vector */
     passupvector_t *pvector;
@@ -71,30 +69,32 @@ int main(){
         /* These semaphores start as synchronization semaphores, including our clock semaphore @49*/
         deviceSema4s[i] = 0;
     }
-    
-     /* Write time onto the pseudoClock semaphore*/
-    LDIT(PCLOCKTIME);
-    
-    pcb_PTR p = allocPcb();
-    if(p != NULL){
-    
+
+    /* Instantiate a single process */
+    currentProc = allocPcb();
+    /* If our current proc is not Null, then initalize all of currentProc's fields*/
+    if(currentProc != NULL){
         /*Set currentProc's state's stack pointer to our interval timer*/
-        p->p_s.s_sp = (memaddr) RAMTOP;
-        p->p_s.s_pc = p->p_s.s_t9 = (memaddr) test; /* test function in p2test */
-        p->p_s.s_status = (ALLOFF | IECON | IMON | TEBITON);
-        p->p_supportStruct = NULL;
+        currentProc->p_s.s_sp = (memaddr) RAMTOP;
+        currentProc->p_s.s_pc = currentProc->p_s.s_t9 = (memaddr) test; /* test function in p2test */
+        currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
+        currentProc->p_supportStruct = NULL;
+
         /*Insert CurrentProc into our readyQue*/
-        insertProcQ(&readyQue, p);
-        processCnt ++;
-         
+        insertProcQ(&readyQue, currentProc);
+        processCnt += 1;
+        /*currentProc = NULL;*/
         /* Call the Scheduler */
         scheduler();
+    } else{
+        PANIC();
     }
+    LDIT(PCLOCKTIME);
     return 0;
 }
 
 /*
-	General Exception Handler. Depending on the value obtained from the cause register, we pick 4
+    General Exception Handler. Depending on the value obtained from the cause register, we pick 4
 	types of exception handling. 
 */
 void genExceptionHandler(){
