@@ -38,23 +38,19 @@ void scheduler() {
         setTIMER(TIMESLICE);        /* Load 5ms on PLT */
         LDST(&(currentProc->p_s));    /* Load processor state */
     } else{
+        currentProc = NULL;
+
         /* Job well done*/
         if(processCnt == 0){
             HALT();
-            
         } else{
-        
             if(softBlockCnt != 0){
-            
                 /* wait */
                 setSTATUS(ALLOFF | IEMON | IMON);
                 WAIT();
-                
             } else{
-            
                 /* deadlock */
                 PANIC();
-                
             }
         }
     }
