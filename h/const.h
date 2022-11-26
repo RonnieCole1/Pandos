@@ -34,12 +34,11 @@
 #define CAUSESHIFT          2
 
 /* status register commands */
-#define ALLOFF              0x0
-#define USERPON             0x00000008
-#define IEPON               0x00000004
-#define IEMON               0x00000001
-#define IMON                0x0000FF00
-#define TEBITON             0x08000000
+#define ALLOFF 0x00000000
+#define IEPON 0x00000004
+#define IEMON	0x00000001
+#define IMON 0x0000FF00
+#define TEBITON 0x08000000
 
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR		    0x10000000
@@ -145,6 +144,7 @@
 
 /* Psuedo Clock Time*/
 #define PCLOCKTIME 100000
+#define INTERVALTIMER 100000
 
 /* Macro to load the Interval Timer */
 #define LDIT(T)	((* ((cpu_t *) INTERVALTMR)) = (T) * (* ((cpu_t *) TIMESCALEADDR))) 

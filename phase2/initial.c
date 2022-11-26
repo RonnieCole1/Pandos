@@ -42,7 +42,6 @@ int main(){
     /* set interval timer to 100 milliseconds */
     devregarea_t *top;
     top = (devregarea_t *) RAMBASEADDR;
-    top->intervaltimer = 100;
     RAMTOP = top->rambase + top->ramsize;
 
     /* Populate the Processor 0 Pass Up Vector */
@@ -71,17 +70,17 @@ int main(){
     }
 
     /* Instantiate a single process */
-    currentProc = allocPcb();
+    pcb_PTR p = allocPcb();
     /* If our current proc is not Null, then initalize all of currentProc's fields*/
-    if(currentProc != NULL){
+    if(p != NULL){
         /*Set currentProc's state's stack pointer to our interval timer*/
-        currentProc->p_s.s_sp = (memaddr) RAMTOP;
-        currentProc->p_s.s_pc = currentProc->p_s.s_t9 = (memaddr) test; /* test function in p2test */
-        currentProc->p_s.s_status = ALLOFF | IEPON | IMON | TEBITON;
-        currentProc->p_supportStruct = NULL;
+        p->p_s.s_sp = (memaddr) RAMTOP;
+        p->p_s.s_pc = p->p_s.s_t9 = (memaddr) test; /* test function in p2test */
+        p->p_s.s_status = (ALLOFF | IEPON | IMON | TEBITON);
+        p->p_supportStruct = NULL;
 
         /*Insert CurrentProc into our readyQue*/
-        insertProcQ(&readyQue, currentProc);
+        insertProcQ(&readyQue, p);
         processCnt += 1;
         /*currentProc = NULL;*/
         /* Call the Scheduler */

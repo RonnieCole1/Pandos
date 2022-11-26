@@ -44,14 +44,16 @@ void interruptHandler(){
     if((cause & SECOND) != 0){              /* local timer, line 1 */
         localTimer(startTime);
     } else if((cause & THIRD) != 0){        /* interval timer, line 2*/
-        LDIT(MILLI);        /* load 100 ms into interval timer */
+        LDIT(INTERVALTIMER);        /* load 100 ms into interval timer */
         semV = (int*) &(deviceSema4s[MAXDEVICECNT-1]);
+        STCK(endTime);
+        temp = removeBlocked(semV);
         while(headBlocked(semV) != NULL){
-            temp = removeBlocked(semV);
-            STCK(endTime);
             if(temp != NULL){
                 insertProcQ(&readyQue, temp);
                 temp->p_time = (temp->p_time) + (endTime - startTime);
+            }
+            if(temp = NULL){
                 softBlockCnt--;
             }
         }
@@ -131,11 +133,8 @@ int getDeviceNumber(unsigned int* bitMap){
 }
 
 void localTimer(cpu_t startTime){
-    cpu_t endTime;
     state_PTR oldInt = (state_PTR) BIOSDATAPAGE;
     if(currentProc != NULL){
-        STCK(endTime);
-        currentProc->p_time = currentProc->p_time + (endTime - TODStarted);
         copyState(oldInt, &(currentProc->p_s));
         insertProcQ(&readyQue, currentProc);
     }

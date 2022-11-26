@@ -34,12 +34,13 @@ void systemCall() {
     state_PTR caller;
     int request;
 
-    /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
     caller = (state_PTR) BIOSDATAPAGE;
-    request = caller->s_a0;
 
     caller->s_pc = caller->s_pc + 4;
 
+    /* Set the a_0 register of the BIOSDATAPAGE to request.*/
+    request = caller->s_a0;
+    
     switch(request) 
     {
         case CREATEPROCESS:
@@ -84,24 +85,24 @@ void Create_ProcessP(state_t *caller){
     pcb_PTR p = allocPcb();
     if(p == NULL){
         caller->s_v0 = FAILURE;
-        LDST(caller);         /*return CPU to caller */
     }
-    processCnt++;
+    if(p != NULL){
+	    processCnt++;
 
-    /* Make p a child of currentProc and also place it on the ReadyQueue */
-    insertChild(currentProc, p);
-    insertProcQ(&readyQue, p);
+	    /* Make p a child of currentProc and also place it on the ReadyQueue */
+	    insertChild(currentProc, p);
+	    insertProcQ(&readyQue, p);
 
-    /* copy CPU state to new process */
-    copyState((state_PTR) caller->s_a1, &(p->p_s));
+	    /* copy CPU state to new process */
+	    copyState((state_PTR) caller->s_a1, &(p->p_s));
 
-    /* Set cpu time to 0 and semAdd to NULL */
-    p->p_time = 0;
-    p->p_semAdd = NULL;
+	    /* Set cpu time to 0 and semAdd to NULL */
+	    p->p_time = 0;
+	    p->p_semAdd = NULL;
 
-    /* set return value */
-    caller->s_v0 = SUCCESS;
-
+	    /* set return value */
+	    caller->s_v0 = SUCCESS;
+    }
     /* return CPU to caller */
     LDST(caller);
 }
@@ -158,6 +159,7 @@ void wait(state_PTR caller)
     if(*sema4 < 0) {
         copyState(caller, &(currentProc->p_s));
         insertBlocked(sema4, currentProc);
+        currentProc = NULL;
         scheduler();
     }
     LDST(caller);
@@ -204,6 +206,7 @@ void Wait_for_IO_Device(state_PTR caller){
         insertBlocked(sem, currentProc);
         copyState(caller, &(currentProc->p_s));
         softBlockCnt++;
+        currentProc = NULL;
         scheduler();
     }
     LDST(caller);
@@ -230,6 +233,7 @@ void Wait_For_Clock(state_PTR caller){
     insertBlocked(semPClock, currentProc);
     copyState(caller, &(currentProc->p_s));     /* store state back in currentProc */
     softBlockCnt++;
+    currentProc = NULL;
     scheduler();
 }
 
