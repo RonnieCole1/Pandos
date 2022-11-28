@@ -151,7 +151,7 @@ void wait(state_PTR caller)
     int* sema4 = (int*) caller->s_a1;
     (*sema4)--;
     if(*sema4 < 0) {
-        /*copyState(caller, &(currentProc->p_s));*/
+        copyState(caller, &(currentProc->p_s));
         cpu_t TODStopped;
 	STCK(TODStopped);
 	currentProc -> p_time = currentProc -> p_time + (TODStopped - TODStarted);
