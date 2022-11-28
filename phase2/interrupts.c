@@ -14,6 +14,7 @@ extern int softBlockCnt;
 extern pcb_t *readyQue;
 extern pcb_t *currentProc;
 extern int deviceSema4s[MAXDEVICECNT];
+extern int* ClockSema4;
 
 /* global variables from scheduler.c */
 extern cpu_t TODStarted;
@@ -25,6 +26,7 @@ void debug(int i){
 void interruptHandler(){
     /* local variables */
     unsigned int cause;
+    cpu_t stopTOD;
     cpu_t startTime, endTime;
     int devNum, lineNum, state, devSem;
     device_t *deviceReg;
@@ -42,23 +44,21 @@ void interruptHandler(){
     lineNum = 0;
 
     if((cause & SECOND) != 0){              /* local timer, line 1 */
-        localTimer(startTime);
+        localTimer();
     } else if((cause & THIRD) != 0){        /* interval timer, line 2*/
-        LDIT(INTERVALTIMER);        /* load 100 ms into interval timer */
-        semV = (int*) &(deviceSema4s[MAXDEVICECNT-1]);
-        STCK(endTime);
-        temp = removeBlocked(semV);
-        while(headBlocked(semV) != NULL){
-            if(temp != NULL){
-                insertProcQ(&readyQue, temp);
-                temp->p_time = (temp->p_time) + (endTime - startTime);
-            }
-            if(temp = NULL){
-                softBlockCnt--;
-            }
+    	LDIT(MILLI);
+        STCK(stopTOD);
+        pcb_PTR p = removeBlocked(ClockSema4);
+        if (p != NULL) {
+        	softBlockCnt--;
         }
-        (*semV) = 0;
-        localTimer(startTime);
+        while (p != NULL){
+            p->p_time = (p->p_time) + (stopTOD - TODStarted);
+            insertProcQ(&readyQue, p);
+            p = removeBlocked(ClockSema4);
+        }
+        *ClockSema4 = 0;
+        localTimer();
     } else if((cause & FOURTH) != 0){       /* disk device */
         lineNum = DISKINT;
     } else if((cause & FIFTH) != 0){        /* flash device */
@@ -104,7 +104,12 @@ void interruptHandler(){
         insertProcQ(&readyQue, temp);
         --softBlockCnt;
     }
-
+    /* 
+        |   This makes us get past P2 test. Wtf?!
+        V
+    */
+    localTimer();
+    
     if(currentProc == NULL){
         scheduler();
     }
@@ -132,7 +137,7 @@ int getDeviceNumber(unsigned int* bitMap){
     return -1;
 }
 
-void localTimer(cpu_t startTime){
+void localTimer(){
     state_PTR oldInt = (state_PTR) BIOSDATAPAGE;
     if(currentProc != NULL){
         copyState(oldInt, &(currentProc->p_s));

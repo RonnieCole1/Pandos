@@ -1,9 +1,10 @@
-#include "../h/pcb.h"
-#include "../h/asl.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../h/initial.h"
+#include "../h/pcb.h"
+#include "../h/asl.h"
 #include "../h/scheduler.h"
+#include "../h/exceptions.h"
+#include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 /********************************** Exception Handling ****************************
@@ -34,13 +35,13 @@ void systemCall() {
     state_PTR caller;
     int request;
 
+    /* Set the a_0 register of the BIOSDATAPAGE to sysNum.*/
     caller = (state_PTR) BIOSDATAPAGE;
+    request = caller->s_a0;
 
     caller->s_pc = caller->s_pc + 4;
+    caller->s_t9 = caller->s_pc + 4;
 
-    /* Set the a_0 register of the BIOSDATAPAGE to request.*/
-    request = caller->s_a0;
-    
     switch(request) 
     {
         case CREATEPROCESS:
@@ -69,7 +70,7 @@ void systemCall() {
         break;
         default:
         /* If we reach here, our sysNum is not between 1-8. We passupordie*/
-            passUpOrDie(caller, GENERALEXCEPT);
+            passUpOrDie(GENERALEXCEPT);
     }
     PANIC();
 }
@@ -80,31 +81,24 @@ void systemCall() {
     Its cpu time is initialized to 0, and its semaphore address is set to NULL since it is in the ready
     state. 
 */
-void Create_ProcessP(state_t *caller){
+void Create_ProcessP(state_PTR caller){
     /* Initialize fields of p */
     pcb_PTR p = allocPcb();
-    if(p == NULL){
-        caller->s_v0 = FAILURE;
+    if(p == NULL) {
+    	caller->s_v0 = FAILURE;
     }
-    if(p != NULL){
-	    processCnt++;
-
-	    /* Make p a child of currentProc and also place it on the ReadyQueue */
-	    insertChild(currentProc, p);
-	    insertProcQ(&readyQue, p);
-
-	    /* copy CPU state to new process */
-	    copyState((state_PTR) caller->s_a1, &(p->p_s));
-
-	    /* Set cpu time to 0 and semAdd to NULL */
-	    p->p_time = 0;
-	    p->p_semAdd = NULL;
-
-	    /* set return value */
-	    caller->s_v0 = SUCCESS;
+    if(p != NULL) {
+    	insertChild(currentProc, p);
+    	insertProcQ(&readyQue, p);
+    	copyState((state_PTR) caller->s_a1, &(p->p_s));
+        p->p_supportStruct = (support_t *) caller->s_a2;
+    	processCnt++;
+    	p->p_time = 0;
+    	p->p_semAdd = NULL;
+    	caller->s_v0 = SUCCESS;
     }
     /* return CPU to caller */
-    LDST(caller);
+    myLDST(caller);
 }
 
 /* 
@@ -157,73 +151,71 @@ void wait(state_PTR caller)
     int* sema4 = (int*) caller->s_a1;
     (*sema4)--;
     if(*sema4 < 0) {
-        copyState(caller, &(currentProc->p_s));
-        insertBlocked(sema4, currentProc);
+        /*copyState(caller, &(currentProc->p_s));*/
+        cpu_t TODStopped;
+	STCK(TODStopped);
+	currentProc -> p_time = currentProc -> p_time + (TODStopped - TODStarted);
+	insertBlocked(sema4, currentProc);
         currentProc = NULL;
         scheduler();
     }
-    LDST(caller);
+    myLDST(caller);
 }
 
 /* System Call 4: Preforms a "V" operation or a signal operation. The semaphore is incremented
 and is unblocked/placed into the ReadyQue.*/
 void signal(state_PTR caller){
-    pcb_PTR p = NULL;
     int* sema4 = (int*) caller->s_a1;
     (*sema4)++;   /* increment semaphore */
     if((*sema4) <= 0) {
-        p = removeBlocked(sema4);
+        pcb_PTR p = removeBlocked(sema4);
         if(p != NULL){
             /* add to ready queue */
             insertProcQ(&(readyQue), p);
         }
     }
     /* return control to caller */
-    LDST(caller);
+    myLDST(caller);
 }
 
 /* Sys5 */
 void Wait_for_IO_Device(state_PTR caller){
     int lineNum, deviceNumber, read, index, *sem;
+    copyState(caller, &(currentProc->p_s));
     lineNum = caller->s_a1;
     deviceNumber = caller->s_a2;
     read = caller->s_a3;    /* terminal read/write */
 
-    if(lineNum < DISKINT || lineNum > TERMINT){
-        Terminate_Process();
-    }
-
-    if(lineNum == TERMINT && read == TRUE){
-        index = DEVPERINT * (lineNum - 3 + read) + deviceNumber;
-    } else{
-        index = DEVPERINT * (lineNum - 3) + deviceNumber;
-    }
+    index = DEVPERINT * (lineNum - 3 + read) + deviceNumber;
 
     sem = &(deviceSema4s[index]);
     (*sem)--;
 
     if((*sem) < 0){
         insertBlocked(sem, currentProc);
-        copyState(caller, &(currentProc->p_s));
         softBlockCnt++;
+        cpu_t TODStopped;
+	STCK(TODStopped);
+	currentProc -> p_time = currentProc -> p_time + (TODStopped - TODStarted);
         currentProc = NULL;
         scheduler();
     }
-    LDST(caller);
 }
 
 /* Sys6 */
 int Get_CPU_Time(state_PTR caller){
-    cpu_t temp;
 
+
+	copyState(caller, &(currentProc->p_s));
     /* get current time, subtract from global start time */
-    STCK(temp);
-    currentProc->p_time = (currentProc->p_time) + (temp - TODStarted);
+    cpu_t TODStopped;
+    STCK(TODStopped);
+    currentProc -> p_time = currentProc -> p_time + (TODStopped - TODStarted);
     caller->s_v0 = currentProc->p_time;
 
     /*update start time */
     STCK(TODStarted);
-    LDST(caller);
+    myLDST(caller);
 }
 
 /* Sys7 */
@@ -245,37 +237,31 @@ void Get_SUPPORT_Data()
 
 void programTRPHNDLR() {
     state_PTR caller = (state_PTR) BIOSDATAPAGE;
-    passUpOrDie(caller, GENERALEXCEPT);
+    passUpOrDie(GENERALEXCEPT);
 }
 
 void TLB_TrapHandler() {
     state_PTR caller = (state_PTR) BIOSDATAPAGE;
-    passUpOrDie(caller, PGFAULTEXCEPT);
+    passUpOrDie(PGFAULTEXCEPT);
 }
 
 /* 
     Passup Or Die 
 */
-void passUpOrDie(pcb_PTR currProc, int reason) {
-    if(currProc->p_supportStruct == NULL) {
+void passUpOrDie(int reason) {
+    if(currentProc->p_supportStruct == NULL) {
         Terminate_Process();
     } else{
         passUp(reason);
     }
 }
 
-void passUp(int ExeptInt) {
-    state_t *tempstate = (((state_t *) BIOSDATAPAGE)->s_cause & GETEXECCODE);
-    currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_cause = tempstate->s_cause;
-    currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_entryHI = tempstate->s_entryHI;
-    currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_pc = tempstate->s_pc;
-    currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_status = tempstate->s_status;
-
-    int i;
-    for(i = 0; i < STATEREGNUM; i++){
-        currentProc->p_supportStruct->sup_exceptState[ExeptInt].s_reg[i] = tempstate->s_reg[i];
-    }
-
-    copyState(tempstate, currentProc->p_supportStruct->sup_exceptState[ExeptInt]);
-    LDCXT(currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_stackPtr, currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_status, currentProc->p_supportStruct->sup_exceptContext[ExeptInt].c_pc);
+void passUp(int type) {
+    /*Copy the state saved in our BIOSDATAPAGE to the support exception state*/
+    copyState(&currentProc->p_supportStruct->sup_exceptContext[type], (state_PTR) BIOSDATAPAGE);
+    /*Load context with the fields of current process' support structure's stack pointer, status,
+    and program counter, all of which was obtained from our BIOSDATAPAGE*/
+    LDCXT(currentProc->p_supportStruct->sup_exceptContext[type].c_stackPtr,
+    currentProc->p_supportStruct->sup_exceptContext[type].c_status,
+    currentProc->p_supportStruct->sup_exceptContext[type].c_pc);
 }

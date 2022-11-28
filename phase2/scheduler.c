@@ -1,8 +1,10 @@
-#include "../h/pcb.h"
-#include "../h/asl.h"
 #include "../h/types.h"
 #include "../h/const.h"
-#include "../h/initial.h"
+#include "../h/pcb.h"
+#include "../h/asl.h"
+#include "../h/scheduler.h"
+#include "../h/exceptions.h"
+#include "../h/interrupts.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 /********************************** Scheduler ****************************
@@ -29,6 +31,7 @@ void scheduler() {
     if(currentProc != NULL){
         STCK(currentTOD);
         currentProc->p_time = (currentProc->p_time) + (currentTOD - TODStarted);
+        LDIT(MILLI);
     }
 
     /* Dispatch the "next" process in the Ready Queue */
@@ -36,10 +39,8 @@ void scheduler() {
         currentProc = removeProcQ(&readyQue);
         STCK(TODStarted);           /* Get the start time */
         setTIMER(TIMESLICE);        /* Load 5ms on PLT */
-        LDST(&(currentProc->p_s));    /* Load processor state */
+        myLDST(&(currentProc->p_s));    /* Load processor state */
     } else{
-        currentProc = NULL;
-
         /* Job well done*/
         if(processCnt == 0){
             HALT();
@@ -54,4 +55,8 @@ void scheduler() {
             }
         }
     }
+}
+
+void myLDST(state_PTR state){
+    LDST(state);
 }
