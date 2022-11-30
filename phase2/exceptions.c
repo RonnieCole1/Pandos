@@ -236,12 +236,10 @@ void Get_SUPPORT_Data()
 }
 
 void programTRPHNDLR() {
-    state_PTR caller = (state_PTR) BIOSDATAPAGE;
     passUpOrDie(GENERALEXCEPT);
 }
 
 void TLB_TrapHandler() {
-    state_PTR caller = (state_PTR) BIOSDATAPAGE;
     passUpOrDie(PGFAULTEXCEPT);
 }
 
@@ -251,6 +249,7 @@ void TLB_TrapHandler() {
 void passUpOrDie(int reason) {
     if(currentProc->p_supportStruct == NULL) {
         Terminate_Process();
+        scheduler();
     } else{
         passUp(reason);
     }
@@ -258,7 +257,7 @@ void passUpOrDie(int reason) {
 
 void passUp(int type) {
     /*Copy the state saved in our BIOSDATAPAGE to the support exception state*/
-    copyState(&currentProc->p_supportStruct->sup_exceptContext[type], (state_PTR) BIOSDATAPAGE);
+    copyState(((state_PTR) BIOSDATAPAGE), &currentProc->p_supportStruct->sup_exceptState[type]);
     /*Load context with the fields of current process' support structure's stack pointer, status,
     and program counter, all of which was obtained from our BIOSDATAPAGE*/
     LDCXT(currentProc->p_supportStruct->sup_exceptContext[type].c_stackPtr,
