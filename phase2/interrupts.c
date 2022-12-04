@@ -53,11 +53,9 @@ void interruptHandler(){
         	softBlockCnt--;
         }
         while (p != NULL){
-            p->p_time = (p->p_time) + (stopTOD - TODStarted);
             insertProcQ(&readyQue, p);
             p = removeBlocked(ClockSema4);
         }
-        *ClockSema4 = 0;
         localTimer();
     } else if((cause & FOURTH) != 0){       /* disk device */
         lineNum = DISKINT;
@@ -72,44 +70,40 @@ void interruptHandler(){
     } else{
         PANIC();                            /* interrupt caused for unknown reason */
     }
-
-    /* get device number */
-    devNum = getDeviceNumber((unsigned int*) (0x1000002C + ((lineNum - 3) * WORDLEN)));
-
     /* Non-Timer Interrupts */
-    int devAddrBase = 0x10000054 + ((lineNum - 3) * EIGHTH) + (devNum * FIFTH);     /* POPs pg. 28 */ /* calculate address for device's device register */
+    if (lineNum >= 3) {
+    	/* get device number */
+    	devNum = getDeviceNumber((unsigned int*) (0x1000002C + ((lineNum - 3) * WORDLEN)));
+    	int devAddrBase = 0x10000054 + ((lineNum - 3) * EIGHTH) + (devNum * FIFTH);     /* POPs pg. 28 */ /* calculate address for device's device register */
+    	device_t *devReg = (device_t *) devAddrBase;
+    	devSem = (((lineNum - 0x3) * DEVPERINT) + devNum);
     
-    devSem = (((lineNum - 0x3) * DEVPERINT) + devNum);
-    
-    if(lineNum == TERMINT){
-        volatile devregarea_t *devReg = (devregarea_t *) RAMBASEADDR;
-        if((devReg->devreg[devSem].t_transm_status & 0x0F) != READY){
-            state = devReg->devreg[devSem].t_transm_status;
-            devReg->devreg[devSem].t_transm_command = ACK;
-        } else{
-            state = devReg->devreg[devSem].t_recv_status;
-            devReg->devreg[devSem].t_recv_command = ACK;
-            devSem = devSem + DEVPERINT;
-        }
-    } else{ 
-        state = (devReg->devreg[devSem]).d_status;
-        devReg->devreg[devSem].d_command= ACK;
-    }
+    	if(lineNum == TERMINT){
+        	if((devReg->t_transm_status & 0x0F) != READY){
+            	state = devReg->t_transm_status;
+            	devReg->t_transm_command = ACK;
+        	} else{
+            	state = devReg->t_recv_status;
+            	devReg->t_recv_command = ACK;
+            	devSem = devSem + DEVPERINT;
+        	}
+    	} else{ 
+        	state = devReg->d_status;
+        	devReg->d_command= ACK;
+    	}
 
-    deviceSema4s[devSem] += 1;
+    	deviceSema4s[devSem] += 1;
 
-    if(deviceSema4s[devSem] <= 0){
-        temp = removeBlocked(&(deviceSema4s[devSem]));
-        temp->p_s.s_v0 = state;
-        insertProcQ(&readyQue, temp);
-        --softBlockCnt;
+    	if(deviceSema4s[devSem] <= 0){
+        	temp = removeBlocked(&(deviceSema4s[devSem]));
+        	STCK(stopTOD);
+        	temp->p_s.s_v0 = state;
+    		temp->p_time = (temp->p_time) +(stopTOD- TODStarted);
+    		insertProcQ(&readyQue, temp);
+    		--softBlockCnt;
+    	}
+    	localTimer();
     }
-    /* 
-        |   This makes us get past P2 test. Wtf?!
-        V
-    */
-    localTimer();
-    
     if(currentProc == NULL){
         scheduler();
     }
