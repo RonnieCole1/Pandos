@@ -47,4 +47,4 @@ leaf process starts
 leaf process starts
 leaf process starts
 p1 finishes OK -- TTFN
-kernel panic()
+System halted 

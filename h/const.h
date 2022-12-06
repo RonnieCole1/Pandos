@@ -33,6 +33,11 @@
 #define GETEXECCODE         0x0000007C
 #define CAUSESHIFT          2
 
+#define TBITS			0x0F
+
+#define REGCONST            0x10000054
+#define DEVCONST            0x1000002C
+
 /* status register commands */
 #define ALLOFF              0x0
 #define USERPON             0x00000008
