@@ -27,8 +27,6 @@ typedef struct {
 #define t_transm_status		d_data0
 #define t_transm_command	d_data1
 
-/*Clock Sema4*/
-#define ClockSema4 deviceSema4s[MAXDEVICECNT-1];
 
 
 /* Bus Register Area */

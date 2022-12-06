@@ -1,1 +1,44 @@
-p
+p1 v(testsem)
+p2 was started
+p2 starts
+p2 v's successfully
+error: not enough cpu time went by
+p2 blew it!
+p3 is started
+p3 - WAITCLOCK OK
+p3 - CPU time correctly maintained
+first incarnation of p4 starts
+p6 starts
+p7 starts
+p5 starts
+second incarnation of p4 starts
+Bus Error: Access non-existent memory
+memory management trap
+p4 is OK
+Correct Support Structure Address
+Address Error: non-kuseg access w/KU=1
+High level SYS call from kernel mode process
+p1 knows p5 ended
+p8root starts
+child1 starts
+child2 starts
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+p8root starts
+child1 starts
+child2 starts
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+p8root starts
+child1 starts
+child2 starts
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+p8root starts
+child1 kernel panic()
