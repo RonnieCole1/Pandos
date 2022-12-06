@@ -444,33 +444,4 @@ void blockingSyscall(int* bsema4) {
         scheduler();
 }
 
-void semaphoreHelper(int sysNum, int* inputSema4) {
-
-	switch(sysNum)
-	{
-		case PASSEREN:
-		(*inputSema4)--;
-		if(*inputSema4 < 0) {
-			blockingSyscall(inputSema4);
-		}
-		break;
-	
-		case VERHOGEN:
-		(*inputSema4)++;
-		if((*inputSema4) <= 0) {
-        		pcb_PTR p = removeBlocked(inputSema4);
-            		/* add to ready queue */
-            		insertProcQ(&(readyQue), p);
-    		}
-		break;
-		
-		case WAITCLOCK:
-		(*ClockSema4)--;
-		if(*ClockSema4 < 0) {
-			blockingSyscall(&(deviceSema4s[MAXDEVICECNT-1]));
-		}
-		break;	
-	}
-	
-}
 
